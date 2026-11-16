@@ -1,0 +1,222 @@
+# Verified Source Configuration, Apify Actor IDs, Input Schemas & Free-Tier Budget Guards
+# Verbatim inputSchema keys verified via $0.00 Apify Actor Metadata API (2026-11-18).
+
+budget_guard:
+  apify_free_tier_monthly_usd: 5.00
+  # Hard stop if account monthly usage reaches $4.00 (leaves $1.00 buffer on free tier)
+  apify_hard_stop_monthly_usd: 4.00
+
+retry_policy:
+  max_attempts: 3
+  backoff_seconds: [2, 4, 8]
+
+smoke_test:
+  tickers_by_exchange:
+    HKEX: ["0700.HK"]
+    KRX: ["005930.KS"]
+  telegram:
+    max_channels_per_exchange: 2
+    max_pages_per_stream: 2
+    max_terms_per_ticker: 1
+  naver:
+    max_pages_per_ticker: 2
+  lihkg:
+    max_keywords: 1
+    search_max_items: 3
+    search_max_charge_usd: 0.02
+    detail_max_threads: 1
+    detail_max_replies: 3
+    detail_max_charge_usd: 0.03
+  exa:
+    query_a_num_results: 5
+    query_b_num_results: 5
+    tier2_trigger_min_articles: 2
+    tier2_num_results: 5
+
+social:
+  telegram:
+    actor_id: "apify/cheerio-scraper"
+    memory_mbytes: 1024
+    run_timeout_secs: 600
+    max_concurrency: 5
+    proxy_configuration:
+      useApifyProxy: true
+    channels:
+      # HKEX (6 live-verified channels)
+      - {exchange: "HKEX", handle: "Financial_Express", name: "财经慢报", reach_label: "37K", mode: "search_q", max_pages: 25, enabled: true}
+      - {exchange: "HKEX", handle: "jin10data", name: "金十数据", reach_label: "11.5K", mode: "search_q", max_pages: 25, enabled: true}
+      - {exchange: "HKEX", handle: "golden_wind_news", name: "7x24投资快讯", reach_label: "4.82K", mode: "search_q", max_pages: 25, enabled: true}
+      - {exchange: "HKEX", handle: "zaobaosg", name: "zaobao.sg 早报", reach_label: "46.4K", mode: "search_q", max_pages: 25, enabled: true}
+      - {exchange: "HKEX", handle: "eco_cn", name: "经济信息联播", reach_label: "12K", mode: "full_feed", max_pages: 40, enabled: true}
+      - {exchange: "HKEX", handle: "StockIntelligence", name: "智能講股", reach_label: "2.29K", mode: "full_feed", max_pages: 40, enabled: true}
+      # KRX (6 live-verified channels)
+      - {exchange: "KRX", handle: "faststocknews", name: "주식 급등일보", reach_label: "129K", mode: "search_q", max_pages: 25, enabled: true}
+      - {exchange: "KRX", handle: "realtime_stock_news", name: "실시간 주식 뉴스", reach_label: "36.9K", mode: "search_q", max_pages: 25, enabled: true}
+      - {exchange: "KRX", handle: "rassiro_channel", name: "씽크풀-주식투자속보", reach_label: "5.91K", mode: "search_q", max_pages: 25, enabled: true}
+      - {exchange: "KRX", handle: "corevalue", name: "가치투자클럽", reach_label: "67K", mode: "full_feed", max_pages: 40, enabled: true}
+      - {exchange: "KRX", handle: "hanaresearch", name: "하나증권 리서치", reach_label: "25.2K", mode: "full_feed", max_pages: 40, enabled: true}
+      - {exchange: "KRX", handle: "shinhanresearch", name: "신한 리서치", reach_label: "21.8K", mode: "full_feed", max_pages: 40, enabled: true}
+      # KRX Standby (disabled by default)
+      - {exchange: "KRX", handle: "meritz_research", name: "메리츠 리서치", reach_label: "27.6K", mode: "full_feed", max_pages: 40, enabled: false}
+      - {exchange: "KRX", handle: "kiwoom_semibat", name: "키움 반배", reach_label: "12.8K", mode: "full_feed", max_pages: 40, enabled: false}
+      - {exchange: "KRX", handle: "sksresearch", name: "SK증권 리서치", reach_label: "9.68K", mode: "full_feed", max_pages: 40, enabled: false}
+
+  naver_finance:
+    actor_id: "apify/cheerio-scraper"
+    memory_mbytes: 1024
+    run_timeout_secs: 1500
+    max_concurrency: 6
+    page_size: 100
+    max_pages_per_ticker: 200
+    api_url_template: "https://m.stock.naver.com/front-api/discussion/list?discussionType=domesticStock&itemCode={krx_code}&pageSize={page_size}"
+    referer_template: "https://m.stock.naver.com/domestic/stock/{krx_code}/discussion"
+    permalink_template: "https://m.stock.naver.com/domestic/stock/{krx_code}/discussion/{post_id}"
+    proxy_configuration:
+      useApifyProxy: true
+
+  lihkg:
+    actor_id: "claude_code_reviewer/lihkg-scraper-en"
+    memory_mbytes: 1024
+    run_timeout_secs: 600
+    # Verbatim inputSchema keys locked via Pre-Flight Gate:
+    # mode ('thread-list'|'thread'|'search'), catIds, threadIds, maxItems, maxReplies,
+    # keywords, order ('desc_reply_time'|'desc_create_time'|'score'), dateFrom, aiLabels, proxyConfiguration
+    verified_input_keys:
+      - "mode"
+      - "catIds"
+      - "threadIds"
+      - "maxItems"
+      - "maxReplies"
+      - "keywords"
+      - "order"
+      - "dateFrom"
+      - "aiLabels"
+      - "proxyConfiguration"
+    # Pay-per-event pricing verified 2026-11-18:
+    # start=$0.005, search-listing=$0.002/thread, product-detail=$0.008/thread, review-item=$0.003/reply
+    # Two-step budget-protected harvest keeps full run strictly <= $1.00:
+    # Step 1 (search): ~200-300 threads @ $0.002 = $0.40-$0.60 (hard cap $0.65)
+    # Step 2 (thread): top 3 threads/ticker (<=15) x 5 replies = ~$0.34 (hard cap $0.35)
+    cat_ids: ["15"]
+    search_order: "desc_create_time"
+    search_max_items_per_keyword: 30
+    search_max_total_charge_usd: 0.65
+    detail_top_threads_per_ticker: 3
+    detail_max_replies_per_thread: 5
+    detail_max_total_charge_usd: 0.35
+    total_hard_cap_usd: 1.00
+    ai_labels: false
+    proxy_configuration:
+      useApifyProxy: true
+
+  backups:
+    aastocks:
+      enabled_by_default: false
+      actor_id: "apify/cheerio-scraper"
+      alt_actor_id: "bovi/aastocks-scraper"
+      memory_mbytes: 1024
+      run_timeout_secs: 300
+      max_pages_per_ticker: 30
+      url_template: "https://www.aastocks.com/tc/stocks/quote/stocknews.aspx?symbol={code_5d}"
+      proxy_configuration:
+        useApifyProxy: true
+    blind:
+      enabled_by_default: false
+      actor_id: "hypebridge/blind-post-scraper"
+      # Verbatim inputSchema keys locked via Pre-Flight Gate:
+      verified_input_keys:
+        - "startUrls"
+        - "maxItems"
+        - "scrapePostsFromLists"
+        - "scrapeComments"
+        - "maxComments"
+        - "maxPages"
+        - "maxConcurrency"
+      max_posts_per_ticker: 100
+      max_total_charge_usd: 0.75
+      memory_mbytes: 1024
+      run_timeout_secs: 600
+
+news:
+  exa:
+    type: "auto"
+    category: "news"
+    contents:
+      highlights:
+        num_sentences: 3
+      text:
+        max_characters: 2000
+    query_a_num_results: 25
+    query_b_num_results: 15
+    tier2_trigger_min_articles: 10
+    tier2_num_results: 20
+    tier1_credibility_weight: 1.5
+    tier2_credibility_weight: 1.0
+    query_a_template: "{company_en} ({ticker}) stock earnings analyst rating guidance price catalyst"
+    query_b_templates:
+      HKEX: "{company_local} {code_short} 股價 財報 評級 目標價 業績"
+      KRX: "{company_local} {exchange_code} 주가 실적 목표주가 공시 리포트"
+    tier1_domains_en:
+      HKEX:
+        - "reuters.com"
+        - "bloomberg.com"
+        - "wsj.com"
+        - "ft.com"
+        - "cnbc.com"
+        - "nikkei.com"
+        - "marketwatch.com"
+        - "finance.yahoo.com"
+        - "scmp.com"
+        - "aastocks.com"
+        - "etnet.com.hk"
+        - "caixinglobal.com"
+      KRX:
+        - "reuters.com"
+        - "bloomberg.com"
+        - "wsj.com"
+        - "ft.com"
+        - "cnbc.com"
+        - "nikkei.com"
+        - "marketwatch.com"
+        - "finance.yahoo.com"
+        - "kedglobal.com"
+        - "pulsenews.co.kr"
+        - "en.yna.co.kr"
+        - "koreaherald.com"
+        - "koreajoongangdaily.joins.com"
+        - "businesskorea.co.kr"
+    tier1_domains_local:
+      HKEX:
+        - "aastocks.com"
+        - "etnet.com.hk"
+        - "hket.com"
+        - "stheadline.com"
+        - "hk01.com"
+        - "mingpao.com"
+        - "scmp.com"
+      KRX:
+        - "hankyung.com"
+        - "mk.co.kr"
+        - "yna.co.kr"
+        - "sedaily.com"
+        - "edaily.co.kr"
+        - "mt.co.kr"
+        - "biz.chosun.com"
+    tier2_exclude_domains:
+      - "reddit.com"
+      - "lihkg.com"
+      - "t.me"
+      - "x.com"
+      - "twitter.com"
+      - "youtube.com"
+      - "facebook.com"
+      - "instagram.com"
+      - "tiktok.com"
+    syndication_title_similarity_threshold: 0.85
+    syndication_window_hours: 24
+
+  tavily_backup:
+    enabled_by_default: false
+    topic: "news"
+    max_results: 20
+    credibility_weight: 1.0

@@ -1,0 +1,269 @@
+# Locked Asset Universe for Asian Equities Sentiment Alpha (HKEX & KRX)
+# Phase 1 Micro-Spec Section 1.4
+
+exchanges:
+  HKEX:
+    timezone: "Asia/Hong_Kong"
+    utc_offset_hours: 8
+    currency: "HKD"
+    warmup_days: 4
+    active_days: 10
+    total_trading_days: 14
+    fetch_calendar_buffer_days: 28
+    warmup_lead_hours: 18
+    lunch_break_local: ["12:00", "13:00"]
+    session_open_local: "09:30"
+    session_close_local: "16:00"
+    expected_bars_per_day: 7
+    # Empirically verified against yfinance 60m & 30m (2026-11-18):
+    # Yahoo grids HKEX 60m bars from 09:30; the 12:30 bar holds exact 13:00-13:30 afternoon open volume.
+    # Also supports 13:00 if Yahoo ever shifts gridding.
+    bar_schedule_local:
+      "09:30": {actual_open: "09:30", close: "10:30", duration_min: 60, segment: "morning"}
+      "10:30": {actual_open: "10:30", close: "11:30", duration_min: 60, segment: "morning"}
+      "11:30": {actual_open: "11:30", close: "12:00", duration_min: 30, segment: "morning"}
+      "12:30": {actual_open: "13:00", close: "13:30", duration_min: 30, segment: "afternoon"}
+      "13:00": {actual_open: "13:00", close: "14:00", duration_min: 60, segment: "afternoon"}
+      "13:30": {actual_open: "13:30", close: "14:30", duration_min: 60, segment: "afternoon"}
+      "14:30": {actual_open: "14:30", close: "15:30", duration_min: 60, segment: "afternoon"}
+      "15:00": {actual_open: "15:00", close: "16:00", duration_min: 60, segment: "afternoon"}
+      "15:30": {actual_open: "15:30", close: "16:00", duration_min: 30, segment: "afternoon"}
+
+  KRX:
+    timezone: "Asia/Seoul"
+    utc_offset_hours: 9
+    currency: "KRW"
+    warmup_days: 4
+    active_days: 10
+    total_trading_days: 14
+    fetch_calendar_buffer_days: 28
+    warmup_lead_hours: 18
+    lunch_break_local: null
+    session_open_local: "09:00"
+    session_close_local: "15:00"
+    expected_bars_per_day: 6
+    # Empirically verified against yfinance 60m & 30m (2026-11-18):
+    # Yahoo emits 6 hourly bars 09:00..14:00 KST (also supports 15:00->15:30 if emitted).
+    bar_schedule_local:
+      "09:00": {actual_open: "09:00", close: "10:00", duration_min: 60, segment: "continuous"}
+      "10:00": {actual_open: "10:00", close: "11:00", duration_min: 60, segment: "continuous"}
+      "11:00": {actual_open: "11:00", close: "12:00", duration_min: 60, segment: "continuous"}
+      "12:00": {actual_open: "12:00", close: "13:00", duration_min: 60, segment: "continuous"}
+      "13:00": {actual_open: "13:00", close: "14:00", duration_min: 60, segment: "continuous"}
+      "14:00": {actual_open: "14:00", close: "15:00", duration_min: 60, segment: "continuous"}
+      "15:00": {actual_open: "15:00", close: "15:30", duration_min: 30, segment: "continuous"}
+
+tickers:
+  # ==================== HKEX Primary 5 ====================
+  - ticker: "0700.HK"
+    exchange: "HKEX"
+    exchange_code: "00700"
+    code_short: "0700"
+    company_en: "Tencent Holdings"
+    company_local: "騰訊"
+    sector: "Mega-Cap Tech / Anchor"
+    enabled: true
+    role: "primary"
+    cashtags: ["$0700", "$0700.HK", "$TCEHY"]
+    ascii_aliases: ["0700", "00700", "0700.HK", "Tencent"]
+    cjk_aliases: ["騰訊", "腾讯", "騰訊控股"]
+    telegram_q_terms: ["腾讯", "騰訊", "0700"]
+    lihkg_keywords: ["騰訊", "0700"]
+
+  - ticker: "9988.HK"
+    exchange: "HKEX"
+    exchange_code: "09988"
+    code_short: "9988"
+    company_en: "Alibaba Group"
+    company_local: "阿里巴巴"
+    sector: "E-Commerce & Cloud"
+    enabled: true
+    role: "primary"
+    cashtags: ["$9988", "$9988.HK", "$BABA"]
+    ascii_aliases: ["9988", "09988", "9988.HK", "BABA", "Alibaba"]
+    cjk_aliases: ["阿里巴巴", "阿里"]
+    telegram_q_terms: ["阿里", "9988"]
+    lihkg_keywords: ["阿里", "9988"]
+
+  - ticker: "1810.HK"
+    exchange: "HKEX"
+    exchange_code: "01810"
+    code_short: "1810"
+    company_en: "Xiaomi Corp."
+    company_local: "小米"
+    sector: "Consumer Tech + EV"
+    enabled: true
+    role: "primary"
+    cashtags: ["$1810", "$1810.HK"]
+    ascii_aliases: ["1810", "01810", "1810.HK", "Xiaomi"]
+    cjk_aliases: ["小米", "小米集團"]
+    telegram_q_terms: ["小米", "1810"]
+    lihkg_keywords: ["小米", "1810"]
+
+  - ticker: "0981.HK"
+    exchange: "HKEX"
+    exchange_code: "00981"
+    code_short: "0981"
+    company_en: "SMIC"
+    company_local: "中芯國際"
+    sector: "Semiconductors"
+    enabled: true
+    role: "primary"
+    cashtags: ["$0981", "$0981.HK"]
+    ascii_aliases: ["0981", "00981", "0981.HK", "SMIC"]
+    cjk_aliases: ["中芯國際", "中芯国际", "中芯"]
+    telegram_q_terms: ["中芯", "0981"]
+    lihkg_keywords: ["中芯", "0981"]
+
+  - ticker: "1211.HK"
+    exchange: "HKEX"
+    exchange_code: "01211"
+    code_short: "1211"
+    company_en: "BYD Company"
+    company_local: "比亞迪"
+    sector: "EV / Automotive"
+    enabled: true
+    role: "primary"
+    cashtags: ["$1211", "$1211.HK", "$BYDDY"]
+    ascii_aliases: ["1211", "01211", "1211.HK", "BYD"]
+    cjk_aliases: ["比亞迪", "比亚迪"]
+    telegram_q_terms: ["比亚迪", "比亞迪", "1211"]
+    lihkg_keywords: ["比亞迪", "1211"]
+
+  # ==================== HKEX Standby 2 ====================
+  - ticker: "3690.HK"
+    exchange: "HKEX"
+    exchange_code: "03690"
+    code_short: "3690"
+    company_en: "Meituan"
+    company_local: "美團"
+    sector: "Local Services"
+    enabled: false
+    role: "standby"
+    cashtags: ["$3690", "$3690.HK"]
+    ascii_aliases: ["3690", "03690", "3690.HK", "Meituan"]
+    cjk_aliases: ["美團", "美团"]
+    telegram_q_terms: ["美团", "美團", "3690"]
+    lihkg_keywords: ["美團", "3690"]
+
+  - ticker: "0005.HK"
+    exchange: "HKEX"
+    exchange_code: "00005"
+    code_short: "0005"
+    company_en: "HSBC Holdings"
+    company_local: "匯控"
+    sector: "Banking"
+    enabled: false
+    role: "standby"
+    cashtags: ["$0005", "$0005.HK", "$HSBC"]
+    ascii_aliases: ["0005", "00005", "0005.HK", "HSBC"]
+    cjk_aliases: ["匯控", "匯豐", "汇丰"]
+    telegram_q_terms: ["汇丰", "匯控", "0005"]
+    lihkg_keywords: ["匯豐", "0005"]
+
+  # ==================== KRX Primary 5 ====================
+  - ticker: "005930.KS"
+    exchange: "KRX"
+    exchange_code: "005930"
+    code_short: "005930"
+    company_en: "Samsung Electronics"
+    company_local: "삼성전자"
+    sector: "KOSPI Flagship / Chips"
+    enabled: true
+    role: "primary"
+    cashtags: ["$005930", "$005930.KS"]
+    ascii_aliases: ["005930", "005930.KS", "Samsung Electronics"]
+    cjk_aliases: ["삼성전자", "삼전"]
+    telegram_q_terms: ["삼성전자", "005930"]
+    lihkg_keywords: []
+
+  - ticker: "000660.KS"
+    exchange: "KRX"
+    exchange_code: "000660"
+    code_short: "000660"
+    company_en: "SK Hynix"
+    company_local: "SK하이닉스"
+    sector: "AI / HBM Memory"
+    enabled: true
+    role: "primary"
+    cashtags: ["$000660", "$000660.KS"]
+    ascii_aliases: ["000660", "000660.KS", "SK Hynix", "Hynix"]
+    cjk_aliases: ["SK하이닉스", "하이닉스", "닉스"]
+    telegram_q_terms: ["SK하이닉스", "000660"]
+    lihkg_keywords: []
+
+  - ticker: "035720.KS"
+    exchange: "KRX"
+    exchange_code: "035720"
+    code_short: "035720"
+    company_en: "Kakao Corp."
+    company_local: "카카오"
+    sector: "Domestic Platform"
+    enabled: true
+    role: "primary"
+    cashtags: ["$035720", "$035720.KS"]
+    ascii_aliases: ["035720", "035720.KS", "Kakao"]
+    cjk_aliases: ["카카오"]
+    telegram_q_terms: ["카카오", "035720"]
+    lihkg_keywords: []
+
+  - ticker: "005380.KS"
+    exchange: "KRX"
+    exchange_code: "005380"
+    code_short: "005380"
+    company_en: "Hyundai Motor"
+    company_local: "현대차"
+    sector: "Global Auto / EV"
+    enabled: true
+    role: "primary"
+    cashtags: ["$005380", "$005380.KS"]
+    ascii_aliases: ["005380", "005380.KS", "Hyundai Motor"]
+    cjk_aliases: ["현대차", "현대자동차", "현차"]
+    telegram_q_terms: ["현대차", "현대자동차", "005380"]
+    lihkg_keywords: []
+
+  - ticker: "373220.KS"
+    exchange: "KRX"
+    exchange_code: "373220"
+    code_short: "373220"
+    company_en: "LG Energy Solution"
+    company_local: "LG에너지솔루션"
+    sector: "EV Batteries"
+    enabled: true
+    role: "primary"
+    cashtags: ["$373220", "$373220.KS"]
+    ascii_aliases: ["373220", "373220.KS", "LG Energy Solution", "LGES"]
+    cjk_aliases: ["LG에너지솔루션", "LG엔솔", "엘지엔솔"]
+    telegram_q_terms: ["LG에너지솔루션", "LG엔솔", "373220"]
+    lihkg_keywords: []
+
+  # ==================== KRX Standby 2 ====================
+  - ticker: "012450.KS"
+    exchange: "KRX"
+    exchange_code: "012450"
+    code_short: "012450"
+    company_en: "Hanwha Aerospace"
+    company_local: "한화에어로스페이스"
+    sector: "Defense / Aerospace"
+    enabled: false
+    role: "standby"
+    cashtags: ["$012450", "$012450.KS"]
+    ascii_aliases: ["012450", "012450.KS", "Hanwha Aerospace"]
+    cjk_aliases: ["한화에어로스페이스", "한화에어로"]
+    telegram_q_terms: ["한화에어로스페이스", "012450"]
+    lihkg_keywords: []
+
+  - ticker: "247540.KQ"
+    exchange: "KRX"
+    exchange_code: "247540"
+    code_short: "247540"
+    company_en: "EcoPro BM"
+    company_local: "에코프로비엠"
+    sector: "Battery Materials"
+    enabled: false
+    role: "standby"
+    cashtags: ["$247540", "$247540.KQ"]
+    ascii_aliases: ["247540", "247540.KQ", "EcoPro BM"]
+    cjk_aliases: ["에코프로비엠"]
+    telegram_q_terms: ["에코프로비엠", "247540"]
+    lihkg_keywords: []

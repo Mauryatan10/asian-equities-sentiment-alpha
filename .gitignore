@@ -1,0 +1,87 @@
+# =============================================================================
+# Secrets & Environment Variables
+# =============================================================================
+.env
+.env.*
+!.env.example
+.streamlit/secrets.toml
+*.pem
+*.key
+secrets.*
+
+# =============================================================================
+# Virtual Environments
+# =============================================================================
+.venv/
+venv/
+env/
+ENV/
+
+# =============================================================================
+# Python Bytecode, Packaging, Testing & Linting Caches
+# =============================================================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+.eggs/
+build/
+dist/
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+.tox/
+
+# =============================================================================
+# Runtime Data, Scraped Snapshots, Processed Tables & Manifests
+# (Phase 5 sample deliverables will be explicitly exported into outputs/ or samples/)
+# =============================================================================
+data/raw/
+data/processed/
+data/manifests/
+data/cache/
+*.parquet
+*.jsonl
+!outputs/**/*.parquet
+!outputs/**/*.jsonl
+!samples/**/*.parquet
+!samples/**/*.jsonl
+
+# Model checkpoints & large binary artifacts
+*.pkl
+*.joblib
+*.pt
+*.pth
+*.bin
+*.ckpt
+*.h5
+
+# =============================================================================
+# Logs, Temp, Scratch & Notebooks
+# =============================================================================
+logs/
+*.log
+tmp/
+scratch/
+*.tmp
+.ipynb_checkpoints/
+
+# =============================================================================
+# Internal / Local Assessment Brief (contains recruiter email; keep local)
+# =============================================================================
+CWT HengSeng exchange sentiment Agent - intern task.txt
+
+# =============================================================================
+# OS & Editor Metadata
+# =============================================================================
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
