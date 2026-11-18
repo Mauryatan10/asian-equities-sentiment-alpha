@@ -1,0 +1,152 @@
+# Phase 2: Feature Engineering & Multi-Agent Processing Configuration
+# Forensically Audited & Live-Verified Spec (Section 2.2 - 2.6)
+
+llm:
+  default_provider: "nvidia"
+  temperature: 0.1
+  max_tokens: 4096
+  batch_size: 25
+  rpm_limit: 25
+  max_concurrency: 5
+  request_timeout_seconds: 120.0
+  retry_max_attempts: 5
+  retry_backoff_seconds: [3, 6, 12, 24, 48]
+  bisect_max_retries: 2
+  social_title_max_chars: 200
+  social_text_max_chars: 600
+  news_title_max_chars: 200
+  news_text_max_chars: 1200
+  providers:
+    nvidia:
+      base_url: "https://integrate.api.nvidia.com/v1"
+      api_key_env: "NVIDIA_API_KEY"
+      cultural_nlp_model: "nvidia/nemotron-3.5-lightning-30b-a3b"
+      portfolio_manager_model: "nvidia/nemotron-3.5-super-vl-120b-a12b"
+      alt_models:
+        - "minimaxai/minimax-m3.1-flash"
+      extra_body:
+        chat_template_kwargs:
+          enable_thinking: false
+      use_response_format_json: true
+    gemini:
+      base_url: "https://generativelanguage.googleapis.com/v1beta/openai/"
+      api_key_env: "GEMINI_API_KEY"
+      cultural_nlp_model: "gemini-2.5-flash"
+      portfolio_manager_model: "gemini-2.5-flash"
+      extra_body: {}
+      use_response_format_json: true
+    groq:
+      base_url: "https://api.groq.com/openai/v1"
+      api_key_env: "GROQ_API_KEY"
+      cultural_nlp_model: "qwen/qwen3-32b"
+      portfolio_manager_model: "qwen/qwen3-32b"
+      extra_body: {}
+      use_response_format_json: true
+
+smoke_test:
+  tickers: ["0700.HK", "005930.KS"]
+  max_llm_items_per_ticker: 10
+  batch_size: 10
+
+router:
+  sqrt_multiplier: 2.0
+  min_quota: 6
+  max_quota: 50
+  verified_reserve_ratio: 0.30
+  fresh_reserve_ratio: 0.15
+  fresh_window_minutes: 60.0
+  priority_weights:
+    views_log: 1.0
+    engagement_log: 2.0
+    holder_verified_bonus: 1.5
+    min_char_len_bonus: 0.5
+    min_char_len_threshold: 30
+
+quant_technical:
+  min_bars: 18
+  max_window: 48
+  atr_period: 14
+  rsi_period: 14
+  vwap_window: 24
+  realized_vol_window: 12
+  realized_vol_min_periods: 6
+  volume_zscore_window: 24
+  volume_zscore_min_periods: 6
+  zscore_clip: 5.0
+  vpvr_points_per_bar: 5
+  vpvr_weights: [0.15, 0.20, 0.30, 0.20, 0.15]
+  kde_bw_atr_factor: 0.75
+  kde_bw_min: 0.15
+  kde_bw_max: 0.80
+  kde_grid_points: 250
+  kde_grid_pad_atr: 0.5
+  peak_prominence_frac: 0.05
+  peak_min_dist_atr: 0.5
+  value_area_pct: 0.70
+  sr_rr_denom_atr_floor: 0.1
+
+alpha_factors:
+  social_fast_half_life_hours: 6.0
+  social_slow_half_life_hours: 24.0
+  news_half_life_hours: 24.0
+  decay_epsilon: 1.0e-6
+  source_blend_weights:
+    KRX:
+      naver_finance: 0.65
+      telegram: 0.35
+    HKEX:
+      lihkg: 0.60
+      telegram: 0.40
+  composite_retail_weight: 0.55
+  composite_news_weight: 0.45
+  event_direction_threshold: 0.15
+  composite_direction_threshold: 0.10
+  price_target_min_ratio: 0.5
+  price_target_max_ratio: 2.0
+  velocity_window: 24
+  velocity_min_periods: 6
+  zscore_clip: 5.0
+  holder_verified_weight_boost: 0.5
+  repost_weight_factor: 0.5
+  catalyst_lookback_hours: 24.0
+  max_top_catalysts_per_type: 5
+
+slang_glossaries:
+  hkex_cantonese:
+    - term: "燈神 / 燈力"
+      meaning: "Reverse-indicator jinx; calling a stock 'great' sarcastically because the poster expects it to crash (bearish reversal)."
+    - term: "蟹貨"
+      meaning: "Bagholder inventory / trapped underwater shares creating overhead supply resistance (bearish)."
+    - term: "坐艇"
+      meaning: "Trapped deeply underwater on a losing position (bearish / capitulation)."
+    - term: "高追"
+      meaning: "Chasing highs / FOMO buying at extended prices (high hype, cautionary/bearish risk)."
+    - term: "大戶派貨"
+      meaning: "Institutional / whale distribution into retail buying (bearish)."
+    - term: "接火棒"
+      meaning: "Catching a falling knife / holding the hot potato at the top (bearish)."
+    - term: "挾淡倉"
+      meaning: "Short squeeze forcing bears to cover (strongly bullish)."
+    - term: "插水 / 跳水"
+      meaning: "Diving / crashing sharply intraday (strongly bearish)."
+    - term: "牛 / 熊 (牛證/熊證)"
+      meaning: "CBBC bull warrants (bullish) vs bear warrants (bearish); '打靶' means knocked out."
+    - term: "多謝大戶 / 好野又跌"
+      meaning: "Ironic praise ('thanks whales', 'yay another drop') — reverse surface praise into bearish sentiment and set is_sarcastic=true."
+  krx_naver:
+    - term: "떡상 / 상한가 / 가즈아"
+      meaning: "Parabolic surge / upper price limit / 'let's go!' (strongly bullish, high hype)."
+    - term: "떡락 / 하한가 / 나락"
+      meaning: "Plunge / lower price limit / abyss (strongly bearish)."
+    - term: "설거지"
+      meaning: "Pump-and-dump exit liquidity ('washing dishes' on retail buyers) (strongly bearish)."
+    - term: "개미털기"
+      meaning: "Shaking out retail weak hands before an institutional rally (bullish if poster expects rebound)."
+    - term: "물타기"
+      meaning: "Averaging down on a losing position (cautious / underwater, mild bearish or hopeful)."
+    - term: "존버"
+      meaning: "Diamond-hands stubborn holding through pain (mildly bullish/defiant but often stressed)."
+    - term: "한강 / 한강물 온도 / 마포대교"
+      meaning: "Han River water temperature dark-humor meme signaling severe losses / despair (strongly bearish, is_sarcastic=true)."
+    - term: "ㅋㅋㅋ / 감사 / 역시 명품주 + loss context"
+      meaning: "Dark humor or ironic praise ('haha truly a luxury stock' while crashing) — reverse surface praise into bearish sentiment and set is_sarcastic=true."
