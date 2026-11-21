@@ -274,6 +274,19 @@ EXA_API_KEY=your_exa_api_key_here
 
 ### 4. Running the Pipeline
 
+#### Step 0: Data Ingestion & Temporal Alignment (Prices, Social & News Scraping)
+```bash
+# Pre-flight zero-cost check to verify Apify actor schemas and API tokens
+python3 -m src.ingest.run --stage preflight
+
+# Execute full ingestion: scrape social posts (LIHKG, Telegram, Naver), fetch Exa news, and align OHLCV bars
+python3 -m src.ingest.run --stage all
+
+# Alternatively, execute a minimal low-cost smoke test (~$0.02-$0.05 cap)
+python3 -m src.ingest.run --stage all --smoke-test
+```
+*(Note: Scraped snapshots are cached under `data/manifests/`. Running with `--smoke-test` allows verification of live Apify and Exa scrapers with minimal API usage).*
+
 #### Step 1: Feature Engineering & AI Sentiment Scoring
 ```bash
 # Run NLP scoring and feature matrix generation
