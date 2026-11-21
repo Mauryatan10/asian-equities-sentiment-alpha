@@ -44,6 +44,7 @@ data/raw/
 data/processed/
 data/manifests/
 data/cache/
+data/reports/
 *.parquet
 *.jsonl
 !outputs/**/*.parquet

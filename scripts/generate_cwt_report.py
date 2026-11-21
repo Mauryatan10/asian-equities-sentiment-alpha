@@ -289,19 +289,13 @@ def generate_report():
     for key, val in replacements.items():
         html_out = html_out.replace(key, val)
 
-    # 4. Save to files
+    # 4. Save to primary report directory
     out_path_reports = Path('reports/cwt_visual_report.html')
-    out_path_data = Path('data/reports/cwt_visual_report.html')
-    
     out_path_reports.parent.mkdir(parents=True, exist_ok=True)
-    out_path_data.parent.mkdir(parents=True, exist_ok=True)
-    
     out_path_reports.write_text(html_out, encoding='utf-8')
-    out_path_data.write_text(html_out, encoding='utf-8')
     
     print(f"Clean report generated successfully!")
     print(f"Saved to: {out_path_reports} ({len(html_out)} bytes)")
-    print(f"Saved to: {out_path_data} ({len(html_out)} bytes)")
 
 if __name__ == '__main__':
     generate_report()
