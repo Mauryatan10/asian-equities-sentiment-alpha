@@ -50,7 +50,7 @@ The system trades a locked universe of 10 large-cap technology equities evenly b
 
 | Source Name | Exchange | Ingestion Engine / Exact Apify Actor ID | Target Platform / Endpoint | Harvest Mode & Parameters |
 | :--- | :---: | :--- | :--- | :--- |
-| **LIHKG** | HKEX | `claude_code_reviewer/lihkg-scraper-en` | Category 15 (財經台 — Finance Board) | 2-step budget-protected harvest ($\le \$1.00$ cap), keyword token search (`cat_ids: ["15"]`). |
+| **LIHKG** | HKEX | `claude_code_reviewer/lihkg-scraper-en` | Category 15 (財經台 — Finance Board) | 2-step budget-protected harvest (capped at $1.00 USD), keyword token search (`cat_ids: ["15"]`). |
 | **Telegram (HKEX)** | HKEX | `apify/cheerio-scraper` | 6 Live-Verified Hong Kong Channels | Light Cheerio HTML scraper: keyword mode (`max_pages: 25`) and full-feed desk mode (`max_pages: 40`). |
 | **Naver Finance** | KRX | `apify/cheerio-scraper` | 종목토론방 (Stock Discussion Room) | Mobile front REST API scraper (`pageSize=100`, max 200 pages); extracts verified shareholder flag (`holder_verified = true`). |
 | **Telegram (KRX)** | KRX | `apify/cheerio-scraper` | 6 Live-Verified South Korean Channels | Light Cheerio HTML scraper: keyword mode (`max_pages: 25`) and full-feed desk mode (`max_pages: 40`). |
@@ -112,8 +112,8 @@ class ScoredEventItem(BaseModel):
    $$\hat{f}(y) = \frac{1}{N h} \sum_{i=1}^N \frac{1}{\sqrt{2\pi}} \exp\left( -\frac{(y - P_i)^2}{2 h^2} \right)$$
    Identifies local density maxima for Support floors ($S_1, S_2$) and Resistance ceilings ($R_1, R_2$) alongside Point of Control (POC). Scale-invariant barrier distances are normalized by 14-period ATR.
 2. **Dual-Horizon Exponential Decay:**
-   $$w_i(t) = \text{base\_weight}_i \cdot 2^{-\frac{t - t_i}{\tau_{1/2}}}$$
-   Synthesizes three decay horizons: Fast Retail ($\tau_{1/2} = 6.0\text{h}$), Slow Retail ($\tau_{1/2} = 24.0\text{h}$), and Institutional News ($\tau_{1/2} = 24.0\text{h}$).
+   $$w_i(t) = w_{0, i} \cdot 2^{-\frac{t - t_i}{\tau_{1/2}}}$$
+   Synthesizes three decay horizons using initial base weight $w_{0, i}$ (`base_weight`): Fast Retail ($\tau_{1/2} = 6.0\text{h}$), Slow Retail ($\tau_{1/2} = 24.0\text{h}$), and Institutional News ($\tau_{1/2} = 24.0\text{h}$).
 3. **Shareholder Conviction Spread (KRX):**
    $$\Delta_{\text{verified}} = \text{Sentiment}_{\text{verified}} - \text{Sentiment}_{\text{unverified}}$$
    Isolates brokerage-verified shareholders on Naver Finance to measure smart-money positioning against unverified retail noise.
@@ -129,9 +129,11 @@ class ScoredEventItem(BaseModel):
 
 To eliminate cross-sectional volatility distortion across high-beta and low-beta equities, the 1-hour forward log return $r_{1h, t+1} = \ln(\text{Close}_{t+1} / \text{Close}_t)$ is normalized by local realized ATR volatility:
 
-$$\text{vol\_scale}_t = \max(\text{ATR}_{\%, 14}, 0.002)$$
+$$\sigma_{\text{vol}, t} = \max(\text{ATR}_{\%, 14}, 0.002)$$
 
-$$y_t = \text{clip}\left( \frac{r_{1h, t+1}}{\text{vol\_scale}_t}, -4.0, +4.0 \right)$$
+$$y_t = \text{clip}\left( \frac{r_{1h, t+1}}{\sigma_{\text{vol}, t}}, -4.0, +4.0 \right)$$
+
+where $\sigma_{\text{vol}, t}$ denotes the local volatility scale factor (`vol_scale` in code, floored at 20 bps).
 
 ### 38-Feature Matrix Specification
 * **Group A (13 Features): Price, Volume & Microstructure Clock:** `log_ret_1h`, `log_ret_3h`, `log_ret_6h`, `realized_vol_12h`, `atr_pct`, `rsi_14`, `price_vs_vwap_pct`, `volume_zscore_24h`, `bar_range_pct`, `close_pos_in_bar`, `is_session_close_bar`, `bar_duration_min_is_30`, `is_hkex`.
@@ -147,7 +149,7 @@ $$y_t = \text{clip}\left( \frac{r_{1h, t+1}}{\text{vol\_scale}_t}, -4.0, +4.0 \r
 3. **Learned Ridge Logistic Gating Network:**
    Blends the base models dynamically:
    $$\hat{y}_{\text{MoE}}(x) = (1 - \pi(s)) \cdot \hat{y}_{\text{Huber}}(x) + \pi(s) \cdot \hat{y}_{\text{LGBM}}(x)$$
-   Conditioned on market state vector $s = [\text{realized\_vol\_12h}, \text{atr\_pct}, \text{sentiment\_dispersion\_24h}]$, initialized at empirical prior log-odds $b_0 = \ln(0.40/0.60) \approx -0.4055$ and trained via 5-fold cross-validation out-of-fold predictions.
+   Conditioned on market state vector $s = [\sigma_{12\text{h}}, \; \text{ATR}_{\%}, \; \Delta_{\text{sent}, 24\text{h}}]$ (mapped to feature columns `['realized_vol_12h', 'atr_pct', 'sentiment_dispersion_24h']`), initialized at empirical prior log-odds $b_0 = \ln(0.40/0.60) \approx -0.4055$ and trained via 5-fold cross-validation out-of-fold predictions.
 
 ---
 
@@ -164,8 +166,8 @@ $$\text{Stance} \in \{+1 \text{ (Long)}, \; -1 \text{ (Short)}, \; 0 \text{ (Fla
    $$\text{SE} = \sqrt{\sigma_{\text{epistemic}}^2 + (0.5 \cdot \sigma_{\text{aleatoric}})^2}, \quad \text{SNR} = \frac{\hat{y}_{\text{MoE}}}{\max(\text{SE}, 10^{-8})}$$
    Orders require $|\text{SNR}| \ge 0.20$. High model disagreement inflates SE, safely aborting execution.
 4. **KDE Support/Resistance Barrier Clearance ($0.25\times\text{ATR}$ Buffer):**
-   * Long orders blocked if $\text{dist\_to\_resistance\_1\_atr} < 0.25$.
-   * Short orders blocked if $\text{dist\_to\_support\_1\_atr} < 0.25$.
+   * Long orders blocked if normalized distance to resistance $< 0.25\times\text{ATR}$ (`dist_to_resistance_1_atr < 0.25`).
+   * Short orders blocked if normalized distance to support $< 0.25\times\text{ATR}$ (`dist_to_support_1_atr < 0.25`).
 5. **Sequential Loss Cooldown:** Two consecutive losses in the same directional stance activates a mandatory 2-bar trading halt.
 6. **Volatility-Targeted Sizing:** Scales position sizes inversely with realized volatility to maintain portfolio-wide risk parity.
 

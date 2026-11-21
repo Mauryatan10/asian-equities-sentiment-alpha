@@ -252,8 +252,8 @@ class ScoredEventItem(BaseModel):
 
 #### Field Validation Logic:
 1. **`sentiment_score` (`float`):** Clamped strictly to $[-1.0, 1.0]$. The prompt forces the LLM to perform **sarcasm reversal**: if a user sarcastically praises a collapsing stock (`"설거지 대성공 ㅋㅋㅋ"`), the intended polarity is converted to negative (e.g. $-0.75$).
-2. **`direction` (`str`):** Must align with `sentiment_score`:
-   $$\text{direction} = \begin{cases} \text{"bullish"}, & \text{if } \text{sentiment\_score} > +0.15 \\ \text{"bearish"}, & \text{if } \text{sentiment\_score} < -0.15 \\ \text{"neutral"}, & \text{otherwise} \end{cases}$$
+2. **`direction` (`str`):** Must align with `sentiment_score` ($s_{\text{sentiment}}$):
+   $$\text{direction} = \begin{cases} \text{"bullish"}, & \text{if } s_{\text{sentiment}} > +0.15 \\ \text{"bearish"}, & \text{if } s_{\text{sentiment}} < -0.15 \\ \text{"neutral"}, & \text{otherwise} \end{cases}$$
 3. **`is_sarcastic` (`bool`):** Explicit flag indicating whether the text exhibited irony, self-deprecating dark humor, or reverse jinxing.
 4. **`hype_score` (`float`):** Clamped to $[0.0, 1.0]$. Measures retail FOMO, meme frenzy, and excessive exclamation/emoticon density.
 5. **`catalyst_type` (`str`):** Normalized to one of 8 categorical enums: `earnings`, `guidance`, `analyst_rating`, `macro_policy`, `product_tech`, `flow_squeeze`, `retail_rumor`, or `other`.
@@ -275,8 +275,8 @@ where $h$ is Silverman's rule-of-thumb bandwidth and $P_i$ are all hourly bar pr
 - **Support Levels ($S_1, S_2, S_3$):** Local maxima of $\hat{f}(y)$ located strictly below the current close ($y < \text{Close}$).
 - **Resistance Levels ($R_1, R_2, R_3$):** Local maxima of $\hat{f}(y)$ located strictly above the current close ($y > \text{Close}$).
 - **Point of Control (POC):** The global maximum of the distribution: $\text{POC} = \arg\max_y \hat{f}(y)$.
-- **ATR Distances:** Normalized distance metrics computed to provide scale-invariant technical barrier features:
-  $$\text{dist\_to\_support\_1\_atr} = \frac{\text{Close} - S_1}{\text{ATR}_{14}}, \quad \text{dist\_to\_resistance\_1\_atr} = \frac{R_1 - \text{Close}}{\text{ATR}_{14}}$$
+- **ATR Distances:** Normalized distance metrics computed to provide scale-invariant technical barrier features (`dist_to_support_1_atr`, `dist_to_resistance_1_atr`):
+  $$d_{\text{support}} = \frac{\text{Close} - S_1}{\text{ATR}_{14}}, \quad d_{\text{resistance}} = \frac{R_1 - \text{Close}}{\text{ATR}_{14}}$$
 
 ---
 
@@ -285,12 +285,14 @@ where $h$ is Silverman's rule-of-thumb bandwidth and $P_i$ are all hourly bar pr
 Raw outputs from the `CulturalNLPAgent` cannot be used directly in predictive models due to uneven sampling intervals, media volume spikes, and point-in-time causality constraints. The `AlphaSynthesisPipeline` converts discrete events into continuous market features.
 
 ### 6.1 Strict Point-in-Time Causal Conditioning
-To eliminate lookahead bias, features evaluated at bar $n$ close ($\text{bar\_close\_utc}$) strictly slice historical events where:
-$$\text{effective\_event\_utc}_i \le \text{bar\_close\_utc}(n)$$
+To eliminate lookahead bias, features evaluated at bar $n$ close ($t_{\text{close}}$) strictly slice historical events where:
+$$t_{\text{event}, i} \le t_{\text{close}}(n)$$
+(where $t_{\text{event}, i}$ represents `effective_event_utc` and $t_{\text{close}}(n)$ is `bar_close_utc`).
 
 ### 6.2 Dual-Horizon Exponential Decay
 Human sentiment decays rapidly in intraday markets. The pipeline applies continuous exponential decay weighting:
-$$w_i(t) = \text{base\_weight}_i \cdot 2^{-\frac{t - t_i}{\tau_{1/2}}}$$
+$$w_i(t) = w_{0, i} \cdot 2^{-\frac{t - t_i}{\tau_{1/2}}}$$
+(where $w_{0, i}$ represents the initial event `base_weight`).
 
 Three distinct horizons are synthesized:
 1. **Fast Retail Horizon ($\tau_{1/2} = 6.0\text{ hours}$):** Captures high-frequency social momentum and rapid viral sentiment shifts.
@@ -314,7 +316,8 @@ $$\text{Divergence}_{24\text{h}} = \text{News}_{24\text{h}} - \text{Retail}_{24\
 
 To model non-linear co-dependence between Sentiment Divergence and market volatility without forcing parametric Gaussian assumptions, the pipeline constructs an **Empirical Copula**:
 $$u_{\text{div}} = \hat{F}_{\text{div}}(\text{Divergence}), \quad u_{\text{vol}} = \hat{F}_{\text{vol}}(\text{Realized Vol}_{12\text{h}})$$
-$$\text{copula\_div\_vol} = u_{\text{div}} \cdot u_{\text{vol}}$$
+$$c_{\text{div, vol}} = u_{\text{div}} \cdot u_{\text{vol}}$$
+(stored as `copula_div_vol` in the 38-feature matrix).
 This factor identifies regime shifts where extreme sentiment divergence coincides with volatility compression (pre-breakout conditions).
 
 ---
@@ -332,9 +335,9 @@ In intraday equity markets, financial return series exhibit pronounced **time-va
 
 If raw log returns were used directly as the optimization target, the regression loss gradients would be overwhelmingly dominated by high-volatility names, effectively blinding the model to subtle sentiment signals in lower-beta equities. To guarantee uniform statistical power across all 10 assets, the target return is scaled by the asset's rolling 14-period Average True Range percentage ($\text{ATR}_{\%, 14}$):
 
-$$\text{vol\_scale}_t = \max(\text{ATR}_{\%, 14}, 0.002)$$
+$$\sigma_{\text{vol}, t} = \max(\text{ATR}_{\%, 14}, 0.002)$$
 
-$$y_t = \text{clip}\left( \frac{r_{1h, t+1}}{\text{vol\_scale}_t}, -4.0, +4.0 \right)$$
+$$y_t = \text{clip}\left( \frac{r_{1h, t+1}}{\sigma_{\text{vol}, t}}, -4.0, +4.0 \right)$$
 
 1. **Unit-Variance Standardization:** The normalized target $y_t$ represents the expected 1-hour price move expressed in multiples of local volatility ($\sigma$-units), equalizing loss contribution across both exchanges.
 2. **Volatility Floor ($0.002 = 20\text{ bps}$):** Prevents numerical explosion or division by near-zero during dormant midday or lunch-break trading sessions.
@@ -418,8 +421,8 @@ To maintain quantitative integrity and eliminate survivorship or lookahead bias,
 
 1. **Zero-Lookahead Temporal Boundary:**
    The training split is bounded by the strict causal inequality:
-   $$\max\left( \text{train\_split.next\_bar\_close\_utc} \right) \le \min\left( \text{test\_oos.bar\_close\_utc} \right)$$
-   No event or price bar occurring after the start of the holdout period is visible to model fitting or scaling routines.
+   $$\max\left( t_{\text{train, next}} \right) \le \min\left( t_{\text{test, close}} \right)$$
+   (enforcing `train_split.next_bar_close_utc <= test_oos.bar_close_utc`). No event or price bar occurring after the start of the holdout period is visible to model fitting or scaling routines.
 2. **Purged Embargo Window (Nov 16–17):**
    Because several alpha factors employ a 24-hour backward exponential decay window, an unpurged train/test split would allow training features to share historical social posts with the early test bars. The 2-day purged embargo completely eliminates rolling feature overlap.
 3. **Out-of-Sample Scaler Freezing:**
@@ -441,7 +444,8 @@ where $\pi(s) \in [0, 1]$ represents the state-conditioned gating probability al
 
 #### Conditioning State Vector ($s$):
 The gating network evaluates a 3-dimensional market state representation:
-$$s = \begin{bmatrix} \text{realized\_vol\_12h} \\ \text{atr\_pct} \\ \text{sentiment\_dispersion\_24h} \end{bmatrix}$$
+$$s = \begin{bmatrix} \sigma_{12\text{h}} \\ \text{ATR}_{\%} \\ \Delta_{\text{sent}, 24\text{h}} \end{bmatrix}$$
+(mapping to state features `['realized_vol_12h', 'atr_pct', 'sentiment_dispersion_24h']`).
 
 1. **Prior Anchoring:** The gating router initializes with a strong empirical prior log-odds:
    $$b_0 = \ln\left( \frac{w_{\text{LGBM, prior}}}{w_{\text{Huber, prior}}} \right) = \ln\left( \frac{0.40}{0.60} \right) \approx -0.4055$$
@@ -479,8 +483,8 @@ $$\text{Stance} \in \{+1 \text{ (Long)}, \; -1 \text{ (Short)}, \; 0 \text{ (Fla
    - Orders require $|\text{SNR}| \ge 0.20$. When expert disagreement widens, SE inflates, dropping SNR below the threshold and safely aborting the trade.
 4. **KDE Support/Resistance Barrier Buffer ($0.25\times\text{ATR}$ Clearance):**
    - Incorporates the deterministic microstructure levels computed in Layer 3:
-     - **Long trades are blocked** if $\text{dist\_to\_resistance\_1\_atr} < 0.25$ (prevents buying directly into an overhead KDE selling ceiling).
-     - **Short trades are blocked** if $\text{dist\_to\_support\_1\_atr} < 0.25$ (prevents shorting directly into an underlying KDE buying floor).
+     - **Long trades are blocked** if normalized distance to resistance $< 0.25\times\text{ATR}$ (`dist_to_resistance_1_atr < 0.25`), preventing buying directly into an overhead KDE selling ceiling.
+     - **Short trades are blocked** if normalized distance to support $< 0.25\times\text{ATR}$ (`dist_to_support_1_atr < 0.25`), preventing shorting directly into an underlying KDE buying floor.
 5. **Sequential Loss Cooldown:**
    - If a specific asset suffers **2 consecutive losing trades** in the same directional stance, the execution engine activates a mandatory **2-bar cooldown pause**, preventing whipsaw traps during sudden regime transitions.
 
