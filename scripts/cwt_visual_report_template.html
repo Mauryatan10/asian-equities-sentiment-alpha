@@ -1,0 +1,1243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Asian Equities Cross-Exchange Sentiment Alpha | Out-of-Sample Visual Report</title>
+<!-- Tailwind CSS via CDN -->
+<script src="https://cdn.tailwindcss.com"></script>
+<!-- Chart.js via CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<!-- Lucide Icons -->
+<script src="https://unpkg.com/lucide@latest"></script>
+<script>
+tailwind.config = {
+    darkMode: 'class',
+    theme: {
+        extend: {
+            colors: {
+                dark: {
+                    bg: '#0b0f19',
+                    surface: '#111827',
+                    card: '#182234',
+                    border: '#24334a',
+                    hover: '#1f2d45'
+                },
+                accent: {
+                    cyan: '#06b6d4',
+                    purple: '#8b5cf6',
+                    green: '#10b981',
+                    red: '#f43f5e',
+                    amber: '#f59e0b'
+                }
+            },
+            fontFamily: {
+                mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'JetBrains Mono', 'monospace'],
+                sans: ['Inter', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif']
+            }
+        }
+    }
+}
+</script>
+<style>
+    body {
+        background-color: #0b0f19;
+        color: #f1f5f9;
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    }
+    .glow-card {
+        background: linear-gradient(135deg, rgba(24, 34, 52, 0.9) 0%, rgba(17, 24, 39, 0.95) 100%);
+        border: 1px solid #24334a;
+    }
+    ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+        background: #0b0f19;
+    }
+    ::-webkit-scrollbar-thumb {
+        background: #24334a;
+        border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+        background: #374151;
+    }
+</style>
+</head>
+<body class="bg-dark-bg min-h-screen text-slate-200 antialiased selection:bg-cyan-500/20 selection:text-cyan-300">
+
+<!-- Top Navigation / Header -->
+<header class="border-b border-dark-border bg-dark-surface/80 backdrop-blur sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div class="flex items-center space-x-3">
+            <div class="p-2 bg-cyan-500/10 border border-cyan-500/30 rounded-lg text-cyan-400">
+                <i data-lucide="bar-chart-3" class="w-6 h-6"></i>
+            </div>
+            <div>
+                <div class="flex items-center gap-2">
+                    <h1 class="text-xl font-bold tracking-tight text-white">Asian Equities Cross-Exchange Sentiment Alpha</h1>
+                    <span class="px-2 py-0.5 text-xs font-semibold bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 rounded-full">Out-of-Sample Test Evaluation</span>
+                </div>
+                <p class="text-xs text-slate-400 mt-0.5">HKEX Hang Seng Tech & KRX KOSPI Tech · Empirical Copula & Cultural NLP · Nov 18–20, 2026</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-3">
+            <span class="inline-flex items-center px-2.5 py-1 rounded text-xs font-medium bg-slate-800 text-slate-300 border border-slate-700">
+                <i data-lucide="calendar" class="w-3.5 h-3.5 mr-1.5 text-cyan-400"></i> Test Window: Nov 18–20, 2026 (180 Bars)
+            </span>
+            <button onclick="window.print()" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 flex items-center gap-1.5 transition">
+                <i data-lucide="printer" class="w-3.5 h-3.5"></i> Export PDF / Print
+            </button>
+        </div>
+    </div>
+</header>
+
+<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+
+    <!-- Section 1: Executive KPI Header Cards -->
+    <section>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            
+            <!-- Card 1: Average Performance -->
+            <div class="glow-card rounded-xl p-5 relative overflow-hidden">
+                <div class="flex items-center justify-between text-xs text-slate-400 uppercase tracking-wider font-semibold">
+                    <span>Average Portfolio</span>
+                    <span class="px-1.5 py-0.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded">Average HK-KR</span>
+                </div>
+                <div class="mt-3 flex items-baseline gap-2">
+                    <span class="text-3xl font-extrabold text-emerald-400 tracking-tight font-mono">+__BLEND_RET__%</span>
+                    <span class="text-xs font-mono text-emerald-500">(+__BLEND_RET_BPS__ bps)</span>
+                </div>
+                <div class="mt-3 grid grid-cols-2 gap-2 text-xs border-t border-slate-800/80 pt-2.5">
+                    <div><span class="text-slate-400">Ann. Sharpe:</span> <span class="font-mono font-semibold text-white">__BLEND_SHARPE__</span></div>
+                    <div><span class="text-slate-400">Max Drawdown:</span> <span class="font-mono font-semibold text-emerald-400">__BLEND_MAX_DD__%</span></div>
+                    <div><span class="text-slate-400">Profit Factor:</span> <span class="font-mono font-semibold text-white">__BLEND_PF__</span></div>
+                    <div><span class="text-slate-400">Eval Bars:</span> <span class="font-mono font-semibold text-slate-300">__ACTIVE_BARS__ Bars</span></div>
+                </div>
+            </div>
+
+            <!-- Card 2: HKEX Portfolio -->
+            <div class="glow-card rounded-xl p-5 relative overflow-hidden border-l-4 border-l-cyan-500">
+                <div class="flex items-center justify-between text-xs text-slate-400 uppercase tracking-wider font-semibold">
+                    <span>HKEX Hang Seng Tech</span>
+                    <span class="px-1.5 py-0.5 bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 rounded">5 Assets</span>
+                </div>
+                <div class="mt-3 flex items-baseline gap-2">
+                    <span class="text-3xl font-extrabold text-cyan-400 tracking-tight font-mono">+__HK_RET__%</span>
+                    <span class="text-xs font-mono text-cyan-500">(+__HK_RET_BPS__ bps)</span>
+                </div>
+                <div class="mt-3 grid grid-cols-2 gap-2 text-xs border-t border-slate-800/80 pt-2.5">
+                    <div><span class="text-slate-400">Ann. Sharpe:</span> <span class="font-mono font-semibold text-white">__HK_SHARPE__</span></div>
+                    <div><span class="text-slate-400">Max Drawdown:</span> <span class="font-mono font-semibold text-cyan-400">__HK_MAX_DD__%</span></div>
+                    <div><span class="text-slate-400">Profit Factor:</span> <span class="font-mono font-semibold text-white">__HK_PF__</span></div>
+                    <div><span class="text-slate-400">Eval Bars:</span> <span class="font-mono font-semibold text-slate-300">20 Bars</span></div>
+                </div>
+            </div>
+
+            <!-- Card 3: KRX Portfolio -->
+            <div class="glow-card rounded-xl p-5 relative overflow-hidden border-l-4 border-l-purple-500">
+                <div class="flex items-center justify-between text-xs text-slate-400 uppercase tracking-wider font-semibold">
+                    <span>KRX KOSPI Tech</span>
+                    <span class="px-1.5 py-0.5 bg-purple-500/10 text-purple-400 border border-purple-500/20 rounded">5 Assets</span>
+                </div>
+                <div class="mt-3 flex items-baseline gap-2">
+                    <span class="text-3xl font-extrabold text-purple-400 tracking-tight font-mono">+__KR_RET__%</span>
+                    <span class="text-xs font-mono text-purple-400">(+__KR_RET_BPS__ bps)</span>
+                </div>
+                <div class="mt-3 grid grid-cols-2 gap-2 text-xs border-t border-slate-800/80 pt-2.5">
+                    <div><span class="text-slate-400">Ann. Sharpe:</span> <span class="font-mono font-semibold text-white">__KR_SHARPE__</span></div>
+                    <div><span class="text-slate-400">Max Drawdown:</span> <span class="font-mono font-semibold text-purple-400">__KR_MAX_DD__%</span></div>
+                    <div><span class="text-slate-400">Profit Factor:</span> <span class="font-mono font-semibold text-white">__KR_PF__</span></div>
+                    <div><span class="text-slate-400">Eval Bars:</span> <span class="font-mono font-semibold text-slate-300">16 Bars</span></div>
+                </div>
+            </div>
+
+            <!-- Card 4: Alpha Delta over Tech-Only Baseline -->
+            <div class="glow-card rounded-xl p-5 relative overflow-hidden">
+                <div class="flex items-center justify-between text-xs text-slate-400 uppercase tracking-wider font-semibold">
+                    <span>Sentiment Alpha Spread</span>
+                    <span class="px-1.5 py-0.5 bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded">vs Tech-Only</span>
+                </div>
+                <div class="mt-3 flex items-baseline gap-2">
+                    <span class="text-3xl font-extrabold text-amber-400 tracking-tight font-mono">+__ALPHA_SPREAD_BPS__ bps</span>
+                    <span class="text-xs font-mono text-slate-400">(+__ALPHA_SPREAD_PCT__%)</span>
+                </div>
+                <div class="mt-3 grid grid-cols-2 gap-2 text-xs border-t border-slate-800/80 pt-2.5">
+                    <div><span class="text-slate-400">Sharpe Delta:</span> <span class="font-mono font-semibold text-emerald-400">+__SHARPE_DELTA__</span></div>
+                    <div><span class="text-slate-400">Tech Sharpe:</span> <span class="font-mono font-semibold text-slate-300">__TECH_SHARPE__</span></div>
+                    <div><span class="text-slate-400">Spearman IC:</span> <span class="font-mono font-semibold text-white">__IC_FULL__</span></div>
+                    <div><span class="text-slate-400">Tech IC:</span> <span class="font-mono font-semibold text-slate-400">__IC_TECH__</span></div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- Section 2: Cross-Exchange Ticker Matrix & Sentiment Ranking -->
+    <section class="space-y-4">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-dark-border pb-4">
+            <div>
+                <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                    <i data-lucide="layers" class="w-5 h-5 text-cyan-400"></i> Cross-Exchange Ticker Matrix: Mentions, Sentiment & Direction
+                </h2>
+                <p class="text-xs text-slate-400">Dynamically sortable by volume of social mentions, sentiment scores, social-news divergence, trade direction, and net returns.</p>
+            </div>
+            
+            <!-- Exchange Filter Tabs -->
+            <div class="flex items-center gap-2 bg-dark-surface p-1 rounded-lg border border-dark-border text-xs">
+                <button id="tab-all" onclick="filterExchange('ALL')" class="px-3 py-1.5 rounded-md font-semibold bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 transition">
+                    All Exchanges (10)
+                </button>
+                <button id="tab-hkex" onclick="filterExchange('HKEX')" class="px-3 py-1.5 rounded-md font-semibold text-slate-400 hover:text-white transition">
+                    HKEX (5)
+                </button>
+                <button id="tab-krx" onclick="filterExchange('KRX')" class="px-3 py-1.5 rounded-md font-semibold text-slate-400 hover:text-white transition">
+                    KRX (5)
+                </button>
+            </div>
+        </div>
+
+        <!-- Dynamic Ticker Table (Click column headers to sort) -->
+        <div class="overflow-x-auto rounded-xl border border-dark-border glow-card">
+            <table class="w-full text-left text-xs border-collapse">
+                <thead id="ticker-table-head">
+                    <tr class="bg-dark-surface/90 text-slate-400 uppercase font-mono tracking-wider border-b border-dark-border text-[11px]">
+                        <th onclick="sortTable('ticker')" class="py-3 px-3 cursor-pointer hover:text-white hover:bg-slate-800/50 transition select-none group" data-sort-key="ticker" title="Sort by Ticker / Asset">
+                            <div class="flex items-center gap-1">
+                                <span>Ticker / Asset</span>
+                                <span class="sort-icon text-[10px] text-slate-600 group-hover:text-slate-400 inline-block ml-1">↕</span>
+                            </div>
+                        </th>
+                        <th onclick="sortTable('social_mentions')" class="py-3 px-2 text-center cursor-pointer hover:text-white hover:bg-slate-800/50 transition select-none group" data-sort-key="social_mentions" title="Sort by Social Mentions">
+                            <div class="flex items-center justify-center gap-1">
+                                <span>Social Mentions</span>
+                                <span class="sort-icon text-[10px] text-slate-600 group-hover:text-slate-400 inline-block ml-1">↕</span>
+                            </div>
+                        </th>
+                        <th onclick="sortTable('news_mentions')" class="py-3 px-2 text-center cursor-pointer hover:text-white hover:bg-slate-800/50 transition select-none group" data-sort-key="news_mentions" title="Sort by News Mentions">
+                            <div class="flex items-center justify-center gap-1">
+                                <span>News Mentions</span>
+                                <span class="sort-icon text-[10px] text-slate-600 group-hover:text-slate-400 inline-block ml-1">↕</span>
+                            </div>
+                        </th>
+                        <th onclick="sortTable('composite_sentiment')" class="py-3 px-2 text-center cursor-pointer hover:text-white hover:bg-slate-800/50 transition select-none group" data-sort-key="composite_sentiment" title="Sort by Sentiment Score">
+                            <div class="flex items-center justify-center gap-1">
+                                <span>Sentiment Score</span>
+                                <span class="sort-icon text-[10px] text-slate-600 group-hover:text-slate-400 inline-block ml-1">↕</span>
+                            </div>
+                        </th>
+                        <th onclick="sortTable('divergence_retail_vs_news')" class="py-3 px-2 text-center cursor-pointer hover:text-white hover:bg-slate-800/50 transition select-none group" data-sort-key="divergence_retail_vs_news" title="Sort by Social-News Divergence">
+                            <div class="flex items-center justify-center gap-1">
+                                <span>Social vs News</span>
+                                <span class="sort-icon text-[10px] text-slate-600 group-hover:text-slate-400 inline-block ml-1">↕</span>
+                            </div>
+                        </th>
+                        <th onclick="sortTable('direction')" class="py-3 px-2 text-center cursor-pointer hover:text-white hover:bg-slate-800/50 transition select-none group" data-sort-key="direction" title="Sort by Trade Direction">
+                            <div class="flex items-center justify-center gap-1">
+                                <span>Trade Direction</span>
+                                <span class="sort-icon text-[10px] text-slate-600 group-hover:text-slate-400 inline-block ml-1">↕</span>
+                            </div>
+                        </th>
+                        <th onclick="sortTable('short_bars')" class="py-3 px-2 text-center cursor-pointer hover:text-white hover:bg-slate-800/50 transition select-none group" data-sort-key="short_bars" title="Sort by Trade Decisions">
+                            <div class="flex items-center justify-center gap-1">
+                                <span>Trade Decisions</span>
+                                <span class="sort-icon text-[10px] text-slate-600 group-hover:text-slate-400 inline-block ml-1">↕</span>
+                            </div>
+                        </th>
+                        <th onclick="sortTable('oos_net_return_bps')" class="py-3 px-2 text-right cursor-pointer hover:text-white hover:bg-slate-800/50 transition select-none group" data-sort-key="oos_net_return_bps" title="Sort by OOS Net Return">
+                            <div class="flex items-center justify-end gap-1">
+                                <span>OOS Net Return</span>
+                                <span class="sort-icon text-[10px] text-slate-600 group-hover:text-slate-400 inline-block ml-1">↕</span>
+                            </div>
+                        </th>
+                        <th onclick="sortTable('tech_net_return_bps')" class="py-3 px-2 text-right cursor-pointer hover:text-white hover:bg-slate-800/50 transition select-none group" data-sort-key="tech_net_return_bps" title="Sort by Tech Baseline Return">
+                            <div class="flex items-center justify-end gap-1">
+                                <span>Tech Return</span>
+                                <span class="sort-icon text-[10px] text-slate-600 group-hover:text-slate-400 inline-block ml-1">↕</span>
+                            </div>
+                        </th>
+                        <th onclick="sortTable('alpha_delta_bps')" class="py-3 px-2 text-right cursor-pointer hover:text-white hover:bg-slate-800/50 transition select-none group" data-sort-key="alpha_delta_bps" title="Sort by Alpha Delta">
+                            <div class="flex items-center justify-end gap-1">
+                                <span>Alpha Delta</span>
+                                <span class="sort-icon text-[10px] text-slate-600 group-hover:text-slate-400 inline-block ml-1">↕</span>
+                            </div>
+                        </th>
+                        <th onclick="sortTable('oos_sharpe')" class="py-3 px-2 text-right cursor-pointer hover:text-white hover:bg-slate-800/50 transition select-none group" data-sort-key="oos_sharpe" title="Sort by Sharpe Ratio">
+                            <div class="flex items-center justify-end gap-1">
+                                <span>Sharpe Ratio</span>
+                                <span class="sort-icon text-[10px] text-slate-600 group-hover:text-slate-400 inline-block ml-1">↕</span>
+                            </div>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody id="ticker-table-body" class="divide-y divide-dark-border/60">
+                    <!-- Populated dynamically via JS -->
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Section 2.5: Granular Hourly Trade Execution Blotter (180 Bars / 79 Active Trades) -->
+    <section class="space-y-4">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-dark-border pb-4">
+            <div>
+                <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                    <i data-lucide="receipt" class="w-5 h-5 text-cyan-400"></i> Granular Trade Execution Blotter (180 Bars / 79 Active Trades)
+                </h2>
+                <p class="text-xs text-slate-400">Granular log of every 1-hour bar execution across the Nov 18–20, 2026 test window. Filter by Active Trades (79), Flat Cash (101), or by asset.</p>
+            </div>
+            
+            <!-- Blotter Filter Controls -->
+            <div class="flex flex-wrap items-center gap-2 text-xs">
+                <div class="flex items-center bg-dark-surface p-1 rounded-lg border border-dark-border">
+                    <button id="btn-blotter-active" onclick="setBlotterStanceFilter('ACTIVE')" class="px-2.5 py-1 rounded font-semibold bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 transition">
+                        Active Trades (79)
+                    </button>
+                    <button id="btn-blotter-all" onclick="setBlotterStanceFilter('ALL')" class="px-2.5 py-1 rounded font-semibold text-slate-400 hover:text-white transition">
+                        All Bars (180)
+                    </button>
+                    <button id="btn-blotter-flat" onclick="setBlotterStanceFilter('FLAT')" class="px-2.5 py-1 rounded font-semibold text-slate-400 hover:text-white transition">
+                        Flat Cash (101)
+                    </button>
+                </div>
+
+                <select id="blotter-ticker-select" onchange="setBlotterTickerFilter(this.value)" class="bg-dark-surface border border-dark-border rounded-lg px-2.5 py-1 text-slate-200 text-xs focus:outline-none focus:border-cyan-500">
+                    <option value="ALL">All Tickers (10)</option>
+                    <option value="1810.HK">1810.HK (Xiaomi)</option>
+                    <option value="1211.HK">1211.HK (BYD)</option>
+                    <option value="0700.HK">0700.HK (Tencent)</option>
+                    <option value="0981.HK">0981.HK (SMIC)</option>
+                    <option value="9988.HK">9988.HK (Alibaba)</option>
+                    <option value="005380.KS">005380.KS (Hyundai)</option>
+                    <option value="000660.KS">000660.KS (SK Hynix)</option>
+                    <option value="005930.KS">005930.KS (Samsung)</option>
+                    <option value="373220.KS">373220.KS (LG Energy)</option>
+                    <option value="035720.KS">035720.KS (Kakao)</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto rounded-xl border border-dark-border glow-card max-h-96 overflow-y-auto">
+            <table class="w-full text-left text-xs border-collapse">
+                <thead class="sticky top-0 z-10 bg-dark-surface/95 backdrop-blur border-b border-dark-border">
+                    <tr class="text-slate-400 uppercase font-mono tracking-wider text-[10px]">
+                        <th class="py-2.5 px-3">Bar Time (UTC)</th>
+                        <th class="py-2.5 px-2">Ticker / Asset</th>
+                        <th class="py-2.5 px-2 text-center">Exchange</th>
+                        <th class="py-2.5 px-2 text-center">Social Sent</th>
+                        <th class="py-2.5 px-2 text-center">News Sent</th>
+                        <th class="py-2.5 px-2 text-center">Divergence</th>
+                        <th class="py-2.5 px-2 text-right">Entry Price</th>
+                        <th class="py-2.5 px-2 text-center">S/R Channel</th>
+                        <th class="py-2.5 px-2 text-right">Forecast (bps)</th>
+                        <th class="py-2.5 px-2 text-center">Executed Stance</th>
+                        <th class="py-2.5 px-2 text-right">Next Close</th>
+                        <th class="py-2.5 px-2 text-right">Actual Move</th>
+                        <th class="py-2.5 px-2 text-right">Slippage</th>
+                        <th class="py-2.5 px-3 text-right">Realized Net PnL</th>
+                    </tr>
+                </thead>
+                <tbody id="blotter-table-body" class="divide-y divide-dark-border/40 font-mono text-[11px]">
+                    <!-- Populated dynamically via JS -->
+                </tbody>
+            </table>
+        </div>
+        <div class="flex items-center justify-between text-xs text-slate-400 px-1">
+            <span id="blotter-count-label">Showing 79 active trade executions</span>
+            <span class="text-slate-500 font-mono text-[11px]">15 bps hurdle | 5 bps slippage | SNR gate</span>
+        </div>
+    </section>
+
+    <!-- Section 3: Visual Chart Suite -->
+    <section class="space-y-6">
+        <div class="border-b border-dark-border pb-4">
+            <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                <i data-lucide="bar-chart-2" class="w-5 h-5 text-cyan-400"></i> Visual Alpha & Sentiment Analytics Suite
+            </h2>
+            <p class="text-xs text-slate-400">Four interactive institutional visualizations analyzing mention volume, social-news divergence quadrants, cumulative equity curves, and asset-level alpha contribution.</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            
+            <!-- Chart 1: Mentions Volume & Net Sentiment Distribution -->
+            <div class="glow-card rounded-xl p-5 space-y-4 lg:col-span-2">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-sm font-bold text-white">Chart 1: Social Mentions vs Sentiment Score by Ticker</h3>
+                        <p class="text-[11px] text-slate-400">Discussion volume (bars) vs net cultural sentiment score (dots across all 10 assets).</p>
+                    </div>
+                    <span class="px-2 py-0.5 text-[10px] bg-slate-800 text-slate-300 border border-slate-700 rounded font-mono">Dual-Axis</span>
+                </div>
+                <div class="h-64 sm:h-72 relative">
+                    <canvas id="chart-sentiment-volume"></canvas>
+                </div>
+            </div>
+
+            <!-- Chart 2: Sentiment Signals vs Realized Price Drift (3 Subplots) -->
+            <div class="glow-card rounded-xl p-5 space-y-4 lg:col-span-2">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-dark-border/70 pb-3">
+                    <div>
+                        <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                            <i data-lucide="bar-chart-2" class="w-4 h-4 text-cyan-400"></i>
+                            Chart 2: Cross-Exchange Sentiment vs. Realized 1-Hour Price Drift (bps)
+                        </h3>
+                        <p class="text-[11px] text-slate-400">Cross-exchange evaluation across all 14 trading days (Nov 3–20, 2026), analyzing average realized 1-hour price moves for HKEX vs KRX across sentiment tiers.</p>
+                    </div>
+                    <div class="flex items-center gap-4 text-xs font-mono">
+                        <span class="flex items-center gap-1.5 text-cyan-400"><span class="w-2.5 h-2.5 rounded-full bg-cyan-400 inline-block"></span> HKEX (Hang Seng)</span>
+                        <span class="flex items-center gap-1.5 text-purple-400"><span class="w-2.5 h-2.5 rounded-full bg-purple-400 inline-block"></span> KRX (KOSPI)</span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                    <!-- Plot 2A: Social Sentiment vs Realized 1h Return -->
+                    <div class="bg-dark-surface/60 rounded-lg p-3.5 border border-dark-border space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-white">Plot 2A: Social Sentiment</span>
+                            <span class="px-1.5 py-0.5 text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded font-mono font-semibold">14 Trading Days</span>
+                        </div>
+                        <p class="text-[10px] text-slate-400">X: Retail Forum Sentiment | Y: Avg Realized 1h Return (bps)</p>
+                        <div class="h-60 relative">
+                            <canvas id="chart-social-vs-actual"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Plot 2B: News Sentiment vs Realized 1h Return -->
+                    <div class="bg-dark-surface/60 rounded-lg p-3.5 border border-dark-border space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-white">Plot 2B: Institutional News Sentiment</span>
+                            <span class="px-1.5 py-0.5 text-[10px] bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 rounded font-mono font-semibold">14 Trading Days</span>
+                        </div>
+                        <p class="text-[10px] text-slate-400">X: Institutional News Sentiment | Y: Avg Realized 1h Return (bps)</p>
+                        <div class="h-60 relative">
+                            <canvas id="chart-news-vs-actual"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Plot 2C: Sentiment Difference vs Realized 1h Return -->
+                    <div class="bg-dark-surface/60 rounded-lg p-3.5 border border-dark-border space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-white">Plot 2C: Sentiment Difference</span>
+                            <span class="px-1.5 py-0.5 text-[10px] bg-purple-500/10 text-purple-400 border border-purple-500/20 rounded font-mono font-semibold">14 Trading Days</span>
+                        </div>
+                        <p class="text-[10px] text-slate-400">X: Sentiment Spread (Social − News) | Y: Avg Realized 1h Return (bps)</p>
+                        <div class="h-60 relative">
+                            <canvas id="chart-diff-vs-actual"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chart 3: Out-of-Sample Cumulative Strategy Equity Curves -->
+            <div class="glow-card rounded-xl p-5 space-y-4 lg:col-span-2">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                        <h3 class="text-sm font-bold text-white">Chart 3: Out-of-Sample Cumulative Alpha Curves (Nov 18–20, 2026)</h3>
+                        <p class="text-[11px] text-slate-400">Walk-forward evaluation comparing Full MoE Alpha Strategy (38 Features) vs Tech-Only Baseline (strictly zero Buy & Hold).</p>
+                    </div>
+                    <div class="flex items-center gap-2 text-xs">
+                        <button onclick="toggleCurveView('all')" id="btn-curve-all" class="px-2 py-1 bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 rounded font-medium">All Series</button>
+                        <button onclick="toggleCurveView('blend')" id="btn-curve-blend" class="px-2 py-1 bg-slate-800 text-slate-400 hover:text-white border border-slate-700 rounded font-medium">Average</button>
+                        <button onclick="toggleCurveView('hkex')" id="btn-curve-hk" class="px-2 py-1 bg-slate-800 text-slate-400 hover:text-white border border-slate-700 rounded font-medium">HKEX Only</button>
+                        <button onclick="toggleCurveView('krx')" id="btn-curve-kr" class="px-2 py-1 bg-slate-800 text-slate-400 hover:text-white border border-slate-700 rounded font-medium">KRX Only</button>
+                    </div>
+                </div>
+                <div class="h-72 sm:h-80 relative">
+                    <canvas id="chart-equity-curves"></canvas>
+                </div>
+            </div>
+
+            <!-- Chart 4: Asset-Level Strategy Returns & S/R Clearance -->
+            <div class="glow-card rounded-xl p-5 space-y-4 lg:col-span-2">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-sm font-bold text-white">Chart 4: Stock-Level Net Returns: Full Ensemble vs Tech-Only Baseline</h3>
+                        <p class="text-[11px] text-slate-400">Net strategy return (bps) across all 10 assets, demonstrating cultural sentiment value-add.</p>
+                    </div>
+                    <span class="px-2 py-0.5 text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded font-mono">Alpha Decomposition</span>
+                </div>
+                <div class="h-72 sm:h-80 relative">
+                    <canvas id="chart-stock-returns"></canvas>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- Section 4: Technical Deliverables & Reproducibility Appendix -->
+    <section class="glow-card rounded-xl p-6 space-y-6">
+        <div class="border-b border-dark-border pb-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                        <i data-lucide="file-code" class="w-5 h-5 text-cyan-400"></i> Technical Deliverables & Reproduction Appendix
+                    </h2>
+                    <p class="text-xs text-slate-400">System architecture, ingestion identifiers, and deterministic CLI commands for out-of-sample backtest reproduction.</p>
+                </div>
+                <span class="px-2.5 py-1 bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 rounded font-mono text-xs">Quantitative Architecture</span>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
+            
+            <!-- Ingestion Specification -->
+            <div class="bg-dark-surface p-4 rounded-xl border border-dark-border space-y-3">
+                <h4 class="font-bold text-white flex items-center gap-2">
+                    <i data-lucide="database" class="w-4 h-4 text-cyan-400"></i> Data Ingestion & Scraper Identifiers
+                </h4>
+                <ul class="space-y-2 text-slate-300">
+                    <li class="flex items-start gap-2">
+                        <span class="text-cyan-400 font-mono font-bold">•</span>
+                        <div>
+                            <span class="font-semibold text-white">Telegram & Naver Finance:</span>
+                            <p class="text-slate-400 text-[11px]">Apify Actor: <code class="text-cyan-300 bg-slate-900 px-1 py-0.5 rounded">apify/cheerio-scraper</code>. Ingests Naver Finance discussion boards (<code class="text-slate-300">finance.naver.com/item/board.naver</code>) and public tech channels with 50,400+ Korean retail posts.</p>
+                        </div>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <span class="text-cyan-400 font-mono font-bold">•</span>
+                        <div>
+                            <span class="font-semibold text-white">LIHKG Discussion Boards:</span>
+                            <p class="text-slate-400 text-[11px]">Apify Actor: <code class="text-cyan-300 bg-slate-900 px-1 py-0.5 rounded">claude_code_reviewer/lihkg-scraper-en</code>. Scrapes Hong Kong retail financial forum category 5 with Cantonese colloquial slang parsing.</p>
+                        </div>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <span class="text-cyan-400 font-mono font-bold">•</span>
+                        <div>
+                            <span class="font-semibold text-white">Exa.com Neural News API:</span>
+                            <p class="text-slate-400 text-[11px]">Endpoint: <code class="text-cyan-300 bg-slate-900 px-1 py-0.5 rounded">https://api.exa.ai/search</code> with bilingual query matrix (Hangul for KRX, Traditional Chinese for HKEX) and text extraction.</p>
+                        </div>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <span class="text-cyan-400 font-mono font-bold">•</span>
+                        <div>
+                            <span class="font-semibold text-white">Market Data (1h OHLCV):</span>
+                            <p class="text-slate-400 text-[11px]">Ingested via Yahoo Finance API across all 10 tickers through Nov 20 close (905 total hourly bars, accounting for KRX CSAT 1h delayed open on Nov 19).</p>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Reproduction Commands -->
+            <div class="bg-dark-surface p-4 rounded-xl border border-dark-border space-y-3">
+                <h4 class="font-bold text-white flex items-center gap-2">
+                    <i data-lucide="terminal" class="w-4 h-4 text-emerald-400"></i> CLI Reproduction Workflow
+                </h4>
+                <div class="space-y-2">
+                    <div class="bg-slate-950 p-2.5 rounded-lg border border-slate-800 font-mono text-[11px] text-slate-300">
+                        <span class="text-slate-500"># 1. Ingest OOS Data (Nov 19-20) & Causal Alignment</span><br>
+                        <span class="text-cyan-400">python</span> -m src.ingest.run --start-date 2026-11-09 --end-date 2026-11-20
+                    </div>
+                    <div class="bg-slate-950 p-2.5 rounded-lg border border-slate-800 font-mono text-[11px] text-slate-300">
+                        <span class="text-slate-500"># 2. Extract 38 Continuous Features & Cultural NLP</span><br>
+                        <span class="text-cyan-400">python</span> -m src.features.run
+                    </div>
+                    <div class="bg-slate-950 p-2.5 rounded-lg border border-slate-800 font-mono text-[11px] text-slate-300">
+                        <span class="text-slate-500"># 3. Train Huber+LGBM MoE & Walk-Forward OOS Eval</span><br>
+                        <span class="text-cyan-400">python</span> -m src.models.run --eval-oos
+                    </div>
+                </div>
+                <p class="text-[11px] text-slate-400">
+                    Execution parameters: 15 bps hurdle rate, 5 bps turnover slippage drag, rolling 24h volume profile KDE support/resistance levels, and deterministic position sizing.
+                </p>
+            </div>
+
+        </div>
+    </section>
+
+</main>
+
+<!-- Footer -->
+<footer class="border-t border-dark-border bg-dark-surface/50 py-6 text-center text-xs text-slate-500">
+    <p>Asian Equities Cross-Exchange Sentiment Alpha · Out-of-Sample Holdout Evaluation (Nov 18–20, 2026)</p>
+    <p class="mt-1">Strict quantitative trading evaluation. Benchmarked solely against Tech-Only baseline.</p>
+</footer>
+
+<!-- Embedded Application Data & Interactive Scripts -->
+<script>
+const TICKERS_DATA = __TICKERS_JSON__;
+const TIMESERIES_DATA = __TIMESERIES_JSON__;
+const TRADES_DATA = __TRADES_JSON__;
+const KPIS_DATA = __KPIS_JSON__;
+const TIERS_DATA = __TIERS_JSON__;
+
+let currentExchange = 'ALL';
+let currentSortKey = 'social_mentions';
+let sortAscending = false;
+let equityChart = null;
+let currentCurveView = 'all';
+
+let blotterStanceFilter = 'ACTIVE';
+let blotterTickerFilter = 'ALL';
+
+// Initialize Lucide Icons
+lucide.createIcons();
+
+// DOM Content Loaded Handler
+document.addEventListener('DOMContentLoaded', () => {
+    renderTable();
+    renderBlotter();
+    initSentimentVolumeChart();
+    initSentimentTierCharts();
+    initEquityCurvesChart();
+    initStockReturnsChart();
+});
+
+// 1. Table Filtering & Sorting
+function filterExchange(exch) {
+    currentExchange = exch;
+    ['all', 'hkex', 'krx'].forEach(k => {
+        const btn = document.getElementById('tab-' + k);
+        if (btn) {
+            btn.className = (k === exch.toLowerCase())
+                ? 'px-3 py-1.5 rounded-md font-semibold bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 transition'
+                : 'px-3 py-1.5 rounded-md font-semibold text-slate-400 hover:text-white transition';
+        }
+    });
+    renderTable();
+}
+
+function sortTable(key) {
+    if (currentSortKey === key) {
+        sortAscending = !sortAscending;
+    } else {
+        currentSortKey = key;
+        sortAscending = false;
+    }
+    renderTable();
+}
+
+function renderTable() {
+    // Update sort header indicators
+    document.querySelectorAll('#ticker-table-head th[data-sort-key]').forEach(th => {
+        const key = th.getAttribute('data-sort-key');
+        const iconSpan = th.querySelector('.sort-icon');
+        if (key === currentSortKey) {
+            th.classList.add('text-cyan-400');
+            th.classList.remove('text-slate-400');
+            if (iconSpan) {
+                iconSpan.textContent = sortAscending ? '▲' : '▼';
+                iconSpan.className = 'sort-icon text-[11px] text-cyan-400 font-bold inline-block ml-1';
+            }
+        } else {
+            th.classList.remove('text-cyan-400');
+            th.classList.add('text-slate-400');
+            if (iconSpan) {
+                iconSpan.textContent = '↕';
+                iconSpan.className = 'sort-icon text-[10px] text-slate-600 group-hover:text-slate-400 inline-block ml-1';
+            }
+        }
+    });
+
+    const tbody = document.getElementById('ticker-table-body');
+    let data = [...TICKERS_DATA];
+    
+    if (currentExchange !== 'ALL') {
+        data = data.filter(d => d.exchange === currentExchange);
+    }
+    
+    data.sort((a, b) => {
+        let vA = a[currentSortKey];
+        let vB = b[currentSortKey];
+        if (typeof vA === 'string') {
+            return sortAscending ? vA.localeCompare(vB) : vB.localeCompare(vA);
+        }
+        return sortAscending ? (vA - vB) : (vB - vA);
+    });
+
+    tbody.innerHTML = '';
+    data.forEach(row => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-dark-hover/60 transition font-mono border-b border-dark-border/40';
+        
+        // Formatted values
+        const exchBadge = row.exchange === 'HKEX' 
+            ? '<span class="px-1.5 py-0.5 rounded text-[10px] bg-cyan-500/15 text-cyan-400 border border-cyan-500/30">HKEX</span>' 
+            : '<span class="px-1.5 py-0.5 rounded text-[10px] bg-purple-500/15 text-purple-400 border border-purple-500/30">KRX</span>';
+            
+        const sentColor = row.composite_sentiment > 0.05 ? 'text-emerald-400' : (row.composite_sentiment < -0.05 ? 'text-rose-400' : 'text-slate-400');
+        const sentSign = row.composite_sentiment > 0 ? '+' : '';
+        
+        const divColor = Math.abs(row.divergence_retail_vs_news) > 0.35 ? 'text-amber-400 font-bold' : 'text-slate-300';
+        const divSign = row.divergence_retail_vs_news > 0 ? '+' : '';
+        
+        const directionBadge = row.direction === 'Short' 
+            ? '<span class="px-2 py-0.5 rounded text-[10px] bg-rose-500/15 text-rose-400 border border-rose-500/30 font-bold">SHORT</span>' 
+            : (row.direction === 'Long' 
+                ? '<span class="px-2 py-0.5 rounded text-[10px] bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-bold">LONG</span>' 
+                : '<span class="px-2 py-0.5 rounded text-[10px] bg-slate-700 text-slate-300">FLAT</span>');
+
+        const retBpsSign = row.oos_net_return_bps > 0 ? '+' : '';
+        const retColor = row.oos_net_return_bps > 0 ? 'text-emerald-400' : (row.oos_net_return_bps < 0 ? 'text-rose-400' : 'text-slate-400');
+        
+        const techRetSign = row.tech_net_return_bps > 0 ? '+' : '';
+        const techColor = row.tech_net_return_bps > 0 ? 'text-emerald-400' : (row.tech_net_return_bps < 0 ? 'text-rose-400' : 'text-slate-400');
+        
+        const alphaDeltaSign = row.alpha_delta_bps > 0 ? '+' : '';
+        const alphaDeltaColor = row.alpha_delta_bps > 0 ? 'text-cyan-400 font-bold' : (row.alpha_delta_bps < 0 ? 'text-amber-400' : 'text-slate-400');
+
+        const retPctFormatted = (row.oos_net_return_pct > 0 ? '+' : '') + row.oos_net_return_pct.toFixed(2) + '%';
+        const techPctFormatted = (row.tech_net_return_pct > 0 ? '+' : '') + row.tech_net_return_pct.toFixed(2) + '%';
+
+        tr.innerHTML = `
+            <td class="py-3 px-3">
+                <div class="flex items-center gap-1.5">
+                    ${exchBadge}
+                    <span class="font-bold text-white">${row.ticker}</span>
+                </div>
+                <div class="text-[11px] text-slate-400 font-sans truncate max-w-[150px]">${row.company_name}</div>
+            </td>
+            <td class="py-3 px-2 text-center text-white font-semibold">${row.social_mentions.toLocaleString()}</td>
+            <td class="py-3 px-2 text-center text-slate-300">${row.news_mentions}</td>
+            <td class="py-3 px-2 text-center ${sentColor} font-semibold">${sentSign}${row.composite_sentiment.toFixed(3)}</td>
+            <td class="py-3 px-2 text-center ${divColor}">${divSign}${row.divergence_retail_vs_news.toFixed(3)}</td>
+            <td class="py-3 px-2 text-center">${directionBadge}</td>
+            <td class="py-3 px-2 text-center text-slate-300">
+                <span class="text-rose-400 font-bold">${row.short_bars}</span> Short / <span class="text-slate-400">${row.flat_bars}</span> Flat
+            </td>
+            <td class="py-3 px-2 text-right ${retColor} font-bold">
+                ${retBpsSign}${row.oos_net_return_bps.toFixed(1)} bps
+                <div class="text-[10px] text-slate-400 font-normal">(${retPctFormatted})</div>
+            </td>
+            <td class="py-3 px-2 text-right ${techColor}">
+                ${techRetSign}${row.tech_net_return_bps.toFixed(1)} bps
+                <div class="text-[10px] text-slate-500 font-normal">(${techPctFormatted})</div>
+            </td>
+            <td class="py-3 px-2 text-right ${alphaDeltaColor} font-bold">
+                ${alphaDeltaSign}${row.alpha_delta_bps.toFixed(1)} bps
+            </td>
+            <td class="py-3 px-2 text-right font-semibold text-slate-200">${row.oos_sharpe.toFixed(2)}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+    lucide.createIcons();
+}
+
+// 1.5 Granular Hourly Trade Execution Blotter
+function setBlotterStanceFilter(stance) {
+    blotterStanceFilter = stance;
+    ['active', 'all', 'flat'].forEach(k => {
+        const btn = document.getElementById('btn-blotter-' + k);
+        if (btn) {
+            btn.className = (k === stance.toLowerCase())
+                ? 'px-2.5 py-1 rounded font-semibold bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 transition'
+                : 'px-2.5 py-1 rounded font-semibold text-slate-400 hover:text-white transition';
+        }
+    });
+    renderBlotter();
+}
+
+function setBlotterTickerFilter(ticker) {
+    blotterTickerFilter = ticker;
+    renderBlotter();
+}
+
+function renderBlotter() {
+    const tbody = document.getElementById('blotter-table-body');
+    if (!tbody || typeof TRADES_DATA === 'undefined') return;
+    
+    let list = [...TRADES_DATA];
+    if (blotterStanceFilter === 'ACTIVE') {
+        list = list.filter(d => d.pos_val !== 0);
+    } else if (blotterStanceFilter === 'FLAT') {
+        list = list.filter(d => d.pos_val === 0);
+    }
+    
+    if (blotterTickerFilter !== 'ALL') {
+        list = list.filter(d => d.ticker === blotterTickerFilter);
+    }
+    
+    tbody.innerHTML = '';
+    list.forEach(row => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-dark-hover/60 transition font-mono border-b border-dark-border/30';
+        
+        const exchBadge = row.exchange === 'HKEX'
+            ? '<span class="px-1 py-0.5 rounded text-[9px] bg-cyan-500/15 text-cyan-400 border border-cyan-500/30">HKEX</span>'
+            : '<span class="px-1 py-0.5 rounded text-[9px] bg-purple-500/15 text-purple-400 border border-purple-500/30">KRX</span>';
+            
+        const stanceBadge = row.pos_val === -1
+            ? '<span class="px-1.5 py-0.5 rounded text-[9px] bg-rose-500/20 text-rose-400 border border-rose-500/30 font-bold">SHORT -1</span>'
+            : (row.pos_val === 1
+                ? '<span class="px-1.5 py-0.5 rounded text-[9px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold">LONG +1</span>'
+                : '<span class="px-1.5 py-0.5 rounded text-[9px] bg-slate-800 text-slate-400 border border-slate-700">FLAT 0</span>');
+                
+        const pnlColor = row.net_pnl_bps > 0 ? 'text-emerald-400 font-bold' : (row.net_pnl_bps < 0 ? 'text-rose-400 font-bold' : 'text-slate-500');
+        const pnlSign = row.net_pnl_bps > 0 ? '+' : '';
+        const moveColor = row.act_ret_bps > 0 ? 'text-emerald-400' : (row.act_ret_bps < 0 ? 'text-rose-400' : 'text-slate-400');
+        const moveSign = row.act_ret_bps > 0 ? '+' : '';
+        const predSign = row.pred_ret_bps > 0 ? '+' : '';
+        
+        const currency = row.exchange === 'HKEX' ? 'HK$' : '₩';
+        const formattedPrice = row.exchange === 'HKEX' ? currency + row.close_price.toFixed(2) : currency + Math.round(row.close_price).toLocaleString();
+        const formattedNextPrice = row.exchange === 'HKEX' ? currency + row.actual_next_close.toFixed(2) : currency + Math.round(row.actual_next_close).toLocaleString();
+        
+        const formatSrPrice = (p) => {
+            if (row.exchange === 'HKEX') {
+                return 'HK$' + p.toFixed(1);
+            } else {
+                return '₩' + (p >= 1000 ? (p / 1000).toFixed(1) + 'k' : Math.round(p));
+            }
+        };
+        const s1Label = formatSrPrice(row.support_1 || 0);
+        const r1Label = formatSrPrice(row.resistance_1 || 0);
+        
+        const span = (row.resistance_1 > row.support_1) ? (row.resistance_1 - row.support_1) : 1.0;
+        const rawPct = ((row.close_price - row.support_1) / span) * 100;
+        const pct = Math.max(0, Math.min(100, rawPct));
+        
+        const dotColor = row.pos_val === -1 ? 'bg-rose-400 ring-2 ring-rose-500/50' : (row.pos_val === 1 ? 'bg-emerald-400 ring-2 ring-emerald-500/50' : 'bg-slate-400 ring-2 ring-slate-500/50');
+        
+        const distS1 = row.dist_to_s1 !== undefined ? row.dist_to_s1 : 0.0;
+        const distR1 = row.dist_to_r1 !== undefined ? row.dist_to_r1 : 0.0;
+        
+        const srChannelHtml = `
+            <div class="flex flex-col items-center justify-center min-w-[130px] max-w-[155px] mx-auto select-none">
+                <div class="flex items-center justify-between w-full text-[8.5px] text-slate-400 font-mono mb-0.5">
+                    <span class="text-emerald-400 font-semibold" title="Support 1: ${s1Label}">S₁ ${s1Label}</span>
+                    <span class="text-rose-400 font-semibold" title="Resistance 1: ${r1Label}">R₁ ${r1Label}</span>
+                </div>
+                <div class="relative w-full h-1.5 bg-slate-800 rounded-full overflow-visible border border-slate-700/60" title="Entry: ${formattedPrice} | ${pct.toFixed(0)}% channel depth | +${distS1.toFixed(1)}σ to S₁ | -${distR1.toFixed(1)}σ to R₁">
+                    <div class="absolute inset-0 bg-gradient-to-r from-emerald-500/20 via-slate-700/40 to-rose-500/20 rounded-full"></div>
+                    <div class="absolute top-1/2 -translate-y-1/2 w-2 h-2 rounded-full ${dotColor} transition-all" style="left: calc(${pct}% - 4px);"></div>
+                </div>
+                <div class="flex items-center justify-between w-full text-[8px] font-mono text-slate-500 mt-0.5">
+                    <span class="text-emerald-400/80">+${distS1.toFixed(1)}σ S₁</span>
+                    <span class="text-rose-400/80">-${distR1.toFixed(1)}σ R₁</span>
+                </div>
+            </div>
+        `;
+
+        const socColor = row.social_sent > 0.05 ? 'text-emerald-400 font-semibold' : (row.social_sent < -0.05 ? 'text-rose-400 font-semibold' : 'text-slate-400');
+        const socSign = row.social_sent > 0 ? '+' : '';
+        const newsColor = row.news_sent > 0.05 ? 'text-emerald-400 font-semibold' : (row.news_sent < -0.05 ? 'text-rose-400 font-semibold' : 'text-slate-400');
+        const newsSign = row.news_sent > 0 ? '+' : '';
+        const divColor = Math.abs(row.divergence) > 0.25 ? 'text-amber-400 font-bold' : 'text-slate-300';
+        const divSign = row.divergence > 0 ? '+' : '';
+
+        tr.innerHTML = `
+            <td class="py-2 px-3 text-slate-300">${row.bar_close_utc}</td>
+            <td class="py-2 px-2">
+                <span class="font-bold text-white">${row.ticker}</span>
+                <span class="text-[10px] text-slate-400 ml-1">(${row.company_name.split(' ')[0]})</span>
+            </td>
+            <td class="py-2 px-2 text-center">${exchBadge}</td>
+            <td class="py-2 px-2 text-center ${socColor}">${socSign}${row.social_sent.toFixed(3)}</td>
+            <td class="py-2 px-2 text-center ${newsColor}">${newsSign}${row.news_sent.toFixed(3)}</td>
+            <td class="py-2 px-2 text-center ${divColor}">${divSign}${row.divergence.toFixed(3)}</td>
+            <td class="py-2 px-2 text-right text-slate-300">${formattedPrice}</td>
+            <td class="py-2 px-2 text-center">${srChannelHtml}</td>
+            <td class="py-2 px-2 text-right ${row.pred_ret_bps < 0 ? 'text-rose-400' : 'text-emerald-400'}">${predSign}${row.pred_ret_bps.toFixed(1)} bps</td>
+            <td class="py-2 px-2 text-center">${stanceBadge}</td>
+            <td class="py-2 px-2 text-right text-slate-300">${formattedNextPrice}</td>
+            <td class="py-2 px-2 text-right ${moveColor}">${moveSign}${row.act_ret_bps.toFixed(1)} bps</td>
+            <td class="py-2 px-2 text-right text-slate-400">${row.slip_bps.toFixed(1)} bps</td>
+            <td class="py-2 px-3 text-right ${pnlColor}">${pnlSign}${row.net_pnl_bps.toFixed(1)} bps</td>
+        `;
+        tbody.appendChild(tr);
+    });
+    
+    const countLabel = document.getElementById('blotter-count-label');
+    if (countLabel) {
+        countLabel.textContent = `Showing ${list.length} bar executions (${blotterStanceFilter.toLowerCase()} stance, ${blotterTickerFilter === 'ALL' ? 'all assets' : blotterTickerFilter})`;
+    }
+}
+
+// 2. Chart 1: Mentions Volume vs Sentiment
+function initSentimentVolumeChart() {
+    const ctx = document.getElementById('chart-sentiment-volume').getContext('2d');
+    
+    // Sort tickers by total mentions descending
+    const sorted = [...TICKERS_DATA].sort((a, b) => b.total_mentions - a.total_mentions);
+    const labels = sorted.map(d => d.ticker);
+    const volumes = sorted.map(d => d.total_mentions);
+    const sentiments = sorted.map(d => d.composite_sentiment);
+    const bgColors = sorted.map(d => d.exchange === 'HKEX' ? 'rgba(6, 182, 212, 0.4)' : 'rgba(139, 92, 246, 0.4)');
+    const borderColors = sorted.map(d => d.exchange === 'HKEX' ? '#06b6d4' : '#8b5cf6');
+
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    type: 'bar',
+                    label: 'Total Mentions (Social + News)',
+                    data: volumes,
+                    backgroundColor: bgColors,
+                    borderColor: borderColors,
+                    borderWidth: 1,
+                    yAxisID: 'yVolume'
+                },
+                {
+                    type: 'line',
+                    label: 'Sentiment Score',
+                    data: sentiments,
+                    borderColor: '#10b981',
+                    backgroundColor: '#10b981',
+                    pointBackgroundColor: sentiments.map(s => s >= 0 ? '#10b981' : '#f43f5e'),
+                    pointRadius: 5,
+                    borderWidth: 2,
+                    yAxisID: 'ySentiment'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    labels: { color: '#94a3b8', font: { size: 11 } }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            if (context.dataset.yAxisID === 'yVolume') {
+                                return `Mentions: ${context.parsed.y.toLocaleString()}`;
+                            }
+                            return `Sentiment: ${context.parsed.y.toFixed(3)}`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    ticks: { color: '#94a3b8', font: { family: 'monospace', size: 10 } },
+                    grid: { color: 'rgba(36, 51, 74, 0.3)' }
+                },
+                yVolume: {
+                    type: 'logarithmic',
+                    position: 'left',
+                    ticks: { color: '#06b6d4', font: { family: 'monospace', size: 10 } },
+                    grid: { color: 'rgba(36, 51, 74, 0.3)' },
+                    title: { display: true, text: 'Mentions (Log Scale)', color: '#06b6d4', font: { size: 10 } }
+                },
+                ySentiment: {
+                    position: 'right',
+                    min: -0.5,
+                    max: 0.5,
+                    ticks: { color: '#10b981', font: { family: 'monospace', size: 10 } },
+                    grid: { drawOnChartArea: false },
+                    title: { display: true, text: 'Sentiment Score (-1 to +1)', color: '#10b981', font: { size: 10 } }
+                }
+            }
+        }
+    });
+}
+
+// 3. Chart 2: Cross-Exchange Sentiment vs. Realized 1-Hour Price Drift (bps)
+function createSentimentTierChart(canvasId, tierData, xTitle) {
+    const el = document.getElementById(canvasId);
+    if (!el) return;
+    const ctx = el.getContext('2d');
+    
+    const labels = tierData.map(d => d.tier);
+    const hkexBps = tierData.map(d => d.hkex_bps);
+    const krxBps = tierData.map(d => d.krx_bps);
+    const hkexCounts = tierData.map(d => d.hkex_count);
+    const krxCounts = tierData.map(d => d.krx_count);
+    
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'HKEX (Hang Seng)',
+                    data: hkexBps,
+                    counts: hkexCounts,
+                    borderColor: '#06b6d4',
+                    backgroundColor: 'rgba(6, 182, 212, 0.15)',
+                    pointBackgroundColor: '#06b6d4',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 2,
+                    pointRadius: 6,
+                    pointHoverRadius: 9,
+                    tension: 0.25,
+                    borderWidth: 2
+                },
+                {
+                    label: 'KRX (KOSPI)',
+                    data: krxBps,
+                    counts: krxCounts,
+                    borderColor: '#a855f7',
+                    backgroundColor: 'rgba(168, 85, 247, 0.15)',
+                    pointBackgroundColor: '#a855f7',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 2,
+                    pointRadius: 6,
+                    pointHoverRadius: 9,
+                    tension: 0.25,
+                    borderWidth: 2
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                    labels: {
+                        color: '#94a3b8',
+                        font: { size: 10 },
+                        boxWidth: 10,
+                        usePointStyle: true
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        title: function(items) {
+                            return `Sentiment Tier: ${items[0].label}`;
+                        },
+                        label: function(context) {
+                            const val = context.raw;
+                            const count = context.dataset.counts[context.dataIndex];
+                            const sign = val >= 0 ? '+' : '';
+                            return `${context.dataset.label}: ${sign}${val.toFixed(1)} bps (${count} bars)`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    ticks: { color: '#94a3b8', font: { family: 'monospace', size: 9 } },
+                    grid: { color: 'rgba(36, 51, 74, 0.35)' },
+                    title: { display: true, text: xTitle, color: '#94a3b8', font: { size: 10 } }
+                },
+                y: {
+                    ticks: {
+                        color: '#94a3b8',
+                        font: { family: 'monospace', size: 9 },
+                        callback: val => `${val} bps`
+                    },
+                    grid: { color: 'rgba(36, 51, 74, 0.35)' },
+                    title: { display: true, text: 'Avg Realized 1h Return (bps)', color: '#94a3b8', font: { size: 10 } }
+                }
+            }
+        },
+        plugins: [{
+            id: 'valueLabels',
+            afterDatasetsDraw(chart) {
+                const ctx = chart.ctx;
+                chart.data.datasets.forEach((dataset, datasetIndex) => {
+                    const meta = chart.getDatasetMeta(datasetIndex);
+                    meta.data.forEach((element, index) => {
+                        const val = dataset.data[index];
+                        if (val === undefined || val === null) return;
+                        ctx.save();
+                        ctx.fillStyle = dataset.borderColor;
+                        ctx.font = 'bold 9px monospace';
+                        ctx.textAlign = 'center';
+                        const sign = val >= 0 ? '+' : '';
+                        const offset = datasetIndex === 0 ? -11 : 16;
+                        ctx.fillText(`${sign}${val.toFixed(1)}`, element.x, element.y + offset);
+                        ctx.restore();
+                    });
+                });
+            }
+        }]
+    });
+}
+
+function initSentimentTierCharts() {
+    createSentimentTierChart('chart-social-vs-actual', TIERS_DATA.social, 'Social Sentiment Score (Retail 24h)');
+    createSentimentTierChart('chart-news-vs-actual', TIERS_DATA.news, 'News Sentiment Score (Institutional 24h)');
+    createSentimentTierChart('chart-diff-vs-actual', TIERS_DATA.diff, 'Sentiment Divergence (Social − News)');
+}
+
+// 4. Chart 3: Out-of-Sample Cumulative Equity Curves
+function initEquityCurvesChart() {
+    const ctx = document.getElementById('chart-equity-curves').getContext('2d');
+    
+    const labels = TIMESERIES_DATA.map(d => d.time);
+    
+    equityChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Average Full Strategy',
+                    data: TIMESERIES_DATA.map(d => d.blend_full_pct),
+                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.05)',
+                    borderWidth: 2.5,
+                    fill: false,
+                    tension: 0.2
+                },
+                {
+                    label: 'Average Tech Baseline',
+                    data: TIMESERIES_DATA.map(d => d.blend_tech_pct),
+                    borderColor: '#64748b',
+                    borderDash: [4, 4],
+                    borderWidth: 1.5,
+                    fill: false,
+                    tension: 0.2
+                },
+                {
+                    label: 'HKEX Full Strategy',
+                    data: TIMESERIES_DATA.map(d => d.hk_full_pct),
+                    borderColor: '#06b6d4',
+                    borderWidth: 2,
+                    fill: false,
+                    tension: 0.2
+                },
+                {
+                    label: 'HKEX Tech Baseline',
+                    data: TIMESERIES_DATA.map(d => d.hk_tech_pct),
+                    borderColor: '#0284c7',
+                    borderDash: [3, 3],
+                    borderWidth: 1.5,
+                    fill: false,
+                    tension: 0.2
+                },
+                {
+                    label: 'KRX Full Strategy',
+                    data: TIMESERIES_DATA.map(d => d.kr_full_pct),
+                    borderColor: '#8b5cf6',
+                    borderWidth: 2,
+                    fill: false,
+                    tension: 0.2
+                },
+                {
+                    label: 'KRX Tech Baseline',
+                    data: TIMESERIES_DATA.map(d => d.kr_tech_pct),
+                    borderColor: '#7c3aed',
+                    borderDash: [3, 3],
+                    borderWidth: 1.5,
+                    fill: false,
+                    tension: 0.2
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                mode: 'index',
+                intersect: false
+            },
+            plugins: {
+                legend: {
+                    labels: { color: '#94a3b8', font: { size: 11 } }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const val = context.parsed.y;
+                            const sign = val >= 0 ? '+' : '';
+                            return ` ${context.dataset.label}: ${sign}${val.toFixed(2)}%`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    ticks: { color: '#94a3b8', font: { family: 'monospace', size: 10 }, maxTicksLimit: 12 },
+                    grid: { color: 'rgba(36, 51, 74, 0.3)' }
+                },
+                y: {
+                    ticks: { 
+                        color: '#94a3b8', 
+                        font: { family: 'monospace', size: 10 },
+                        callback: function(val) { return val.toFixed(2) + '%'; }
+                    },
+                    grid: { color: 'rgba(36, 51, 74, 0.3)' },
+                    title: { display: true, text: 'Cumulative Net Strategy Return (%)', color: '#94a3b8', font: { size: 11 } }
+                }
+            }
+        }
+    });
+}
+
+function toggleCurveView(view) {
+    currentCurveView = view;
+    ['all', 'blend', 'hk', 'kr'].forEach(v => {
+        const btn = document.getElementById('btn-curve-' + v);
+        if (btn) {
+            btn.className = (v === view) 
+                ? 'px-2 py-1 bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 rounded font-medium'
+                : 'px-2 py-1 bg-slate-800 text-slate-400 hover:text-white border border-slate-700 rounded font-medium';
+        }
+    });
+
+    if (!equityChart) return;
+
+    if (view === 'all') {
+        equityChart.data.datasets.forEach(ds => ds.hidden = false);
+    } else if (view === 'blend') {
+        equityChart.data.datasets.forEach((ds, i) => ds.hidden = !(i === 0 || i === 1));
+    } else if (view === 'hk') {
+        equityChart.data.datasets.forEach((ds, i) => ds.hidden = !(i === 2 || i === 3));
+    } else if (view === 'kr') {
+        equityChart.data.datasets.forEach((ds, i) => ds.hidden = !(i === 4 || i === 5));
+    }
+    equityChart.update();
+}
+
+// 5. Chart 4: Stock-Level Strategy Returns vs Tech Baseline
+function initStockReturnsChart() {
+    const ctx = document.getElementById('chart-stock-returns').getContext('2d');
+    
+    // Sorted by alpha delta
+    const sorted = [...TICKERS_DATA].sort((a, b) => b.alpha_delta_bps - a.alpha_delta_bps);
+    const labels = sorted.map(d => `${d.ticker} (${d.exchange})`);
+    const fullReturns = sorted.map(d => d.oos_net_return_bps);
+    const techReturns = sorted.map(d => d.tech_net_return_bps);
+
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Full MoE Alpha Strategy (bps)',
+                    data: fullReturns,
+                    backgroundColor: sorted.map(d => d.oos_net_return_bps >= 0 ? '#10b981' : '#f43f5e'),
+                    borderWidth: 0,
+                    borderRadius: 4
+                },
+                {
+                    label: 'Tech-Only Baseline (bps)',
+                    data: techReturns,
+                    backgroundColor: 'rgba(100, 116, 139, 0.6)',
+                    borderWidth: 0,
+                    borderRadius: 4
+                }
+            ]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    labels: { color: '#94a3b8', font: { size: 11 } }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `${context.dataset.label}: ${context.parsed.x.toFixed(1)} bps`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    ticks: { color: '#94a3b8', font: { family: 'monospace', size: 10 } },
+                    grid: { color: 'rgba(36, 51, 74, 0.3)' },
+                    title: { display: true, text: 'Net Strategy Return (bps)', color: '#94a3b8', font: { size: 11 } }
+                },
+                y: {
+                    ticks: { color: '#f1f5f9', font: { family: 'monospace', size: 10, weight: 'bold' } },
+                    grid: { display: false }
+                }
+            }
+        }
+    });
+}
+</script>
+</body>
+</html>

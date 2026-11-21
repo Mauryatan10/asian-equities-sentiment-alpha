@@ -1,0 +1,58 @@
+flowchart TD
+    subgraph Layer1 ["Layer 1: Ingestion & Feeds"]
+        RawSocial["Retail Social Streams<br/>(LIHKG, Telegram, Naver Finance)"]
+        RawNews["Institutional News Stream<br/>(Exa.com Neural News API)"]
+        RawBars["Market OHLCV Bars<br/>(1-Hour Bars, HKEX & KRX)"]
+    end
+
+    subgraph Layer2 ["Layer 2: AI Cultural NLP Agent"]
+        CulturalAgent["CulturalNLPAgent<br/>(Powered by NVIDIA NIM)"]
+        PromptEngine["System & User Prompt Engine<br/>(Slang Glossaries & Schema Enforcement)"]
+        PydanticParser["Pydantic Parser & Validator<br/>(ScoredEventItem 8-Field Output)"]
+        CheckpointStore["Append-Only JSONL Cache<br/>(Idempotent & Zero-Loss Recovery)"]
+        
+        RawSocial --> PromptEngine
+        RawNews --> PromptEngine
+        PromptEngine --> CulturalAgent
+        CulturalAgent --> PydanticParser
+        PydanticParser --> CheckpointStore
+    end
+
+    subgraph Layer3 ["Layer 3: Technical Microstructure"]
+        KDEEngine["Gaussian KDE S/R Engine<br/>(Continuous S1, S2, R1, R2, POC)"]
+        ATRVol["Microstructure Volatility<br/>(ATR-14, VWAP Deviation)"]
+        RawBars --> KDEEngine
+        RawBars --> ATRVol
+    end
+
+    subgraph Layer4 ["Layer 4: Alpha Feature Synthesis"]
+        DecayEngine["Dual-Horizon Exponential Decay<br/>(Fast 6h, Slow 24h, News 24h)"]
+        CopulaEngine["Empirical Copula Engine<br/>(Non-Linear Tail Co-dependence)"]
+        VerifiedSpread["Shareholder Conviction Alpha<br/>(Naver Verified vs Unverified)"]
+        
+        CheckpointStore --> DecayEngine
+        CheckpointStore --> VerifiedSpread
+        DecayEngine --> CopulaEngine
+        ATRVol --> CopulaEngine
+    end
+
+    subgraph Layer5 ["Layer 5: MoE Ensemble & Execution"]
+        HuberModel["Expert 1: Huber Regressor<br/>(Fat-Tail Linear Model)"]
+        LGBMModel["Expert 2: LightGBM Tree<br/>(Non-Linear Interactions)"]
+        MoERouter["Convex Gating Router<br/>(Regime-Conditioned Blending)"]
+        RiskGates["Deterministic Execution Gates<br/>(15 bps Hurdle, 0.25 ATR S/R Buffer)"]
+        ExecutionBlotter["Trade Blotter & Portfolio Execution<br/>(Long/Short/Flat Decisions)"]
+
+        DecayEngine --> HuberModel
+        DecayEngine --> LGBMModel
+        VerifiedSpread --> HuberModel
+        VerifiedSpread --> LGBMModel
+        CopulaEngine --> LGBMModel
+        KDEEngine --> HuberModel
+        KDEEngine --> LGBMModel
+        ATRVol --> MoERouter
+        HuberModel --> MoERouter
+        LGBMModel --> MoERouter
+        MoERouter --> RiskGates
+        RiskGates --> ExecutionBlotter
+    end

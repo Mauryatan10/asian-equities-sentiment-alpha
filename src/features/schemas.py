@@ -70,7 +70,6 @@ class LLMProviderConfig(BaseModel):
     base_url: str
     api_key_env: str
     cultural_nlp_model: str
-    portfolio_manager_model: str
     alt_models: list[str] = Field(default_factory=list)
     extra_body: dict[str, Any] = Field(default_factory=dict)
     use_response_format_json: bool = True

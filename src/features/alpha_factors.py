@@ -211,6 +211,70 @@ def compute_full_corpus_stats(
     )
 
 
+def _rolling_ecdf_copula(arr: np.ndarray, window: int = 42) -> np.ndarray:
+    """Calculate causal rolling empirical cumulative distribution function (ECDF) rank
+    mapped to scale-invariant uniform variable u in [-1.0, +1.0] over lookback window."""
+    n = len(arr)
+    u = np.zeros(n, dtype=np.float64)
+    for t in range(n):
+        start = max(0, t - window + 1)
+        w = arr[start : t + 1]
+        val = arr[t]
+        if np.isnan(val):
+            u[t] = 0.0
+            continue
+        valid_w = w[~np.isnan(w)]
+        k = len(valid_w)
+        if k <= 1:
+            u[t] = 0.0
+            continue
+        rank = float(np.sum(valid_w < val) + 0.5 * np.sum(valid_w == val) + 0.5)
+        v = (rank - 0.5) / float(k)
+        u[t] = float(np.clip(2.0 * v - 1.0, -1.0, 1.0))
+    return u
+
+
+def compute_rolling_copula_features(df: pd.DataFrame, window: int = 42) -> pd.DataFrame:
+    """Compute rolling rank-transformed copula variables in [-1, +1] and bilinear interactions per ticker."""
+    res_df = df.copy()
+    if "copula_div_trend" not in res_df.columns:
+        res_df["copula_div_trend"] = 0.0
+    if "copula_div_vol" not in res_df.columns:
+        res_df["copula_div_vol"] = 0.0
+
+    div_col = "divergence_retail_vs_news_24h"
+    trend_col = "price_vs_vwap_pct"
+    vol_col = "realized_vol_12h"
+
+    if div_col not in res_df.columns or trend_col not in res_df.columns or vol_col not in res_df.columns:
+        return res_df
+
+    if "ticker" in res_df.columns:
+        groups = res_df.groupby("ticker", sort=False)
+    else:
+        groups = [(None, res_df)]
+
+    for _, grp in groups:
+        if "bar_close_utc" in grp.columns:
+            grp_sorted = grp.sort_values("bar_close_utc")
+        else:
+            grp_sorted = grp
+        idx = grp_sorted.index
+
+        div_vals = grp_sorted[div_col].fillna(0.0).to_numpy(dtype=np.float64)
+        trend_vals = grp_sorted[trend_col].fillna(0.0).to_numpy(dtype=np.float64)
+        vol_vals = grp_sorted[vol_col].fillna(0.0).to_numpy(dtype=np.float64)
+
+        u_div = _rolling_ecdf_copula(div_vals, window=window)
+        u_trend = _rolling_ecdf_copula(trend_vals, window=window)
+        u_vol = _rolling_ecdf_copula(vol_vals, window=window)
+
+        res_df.loc[idx, "copula_div_trend"] = u_div * u_trend
+        res_df.loc[idx, "copula_div_vol"] = u_div * u_vol
+
+    return res_df
+
+
 def _evaluate_decayed_sentiment_at_time(
     target_sec: float,
     exchange: str,

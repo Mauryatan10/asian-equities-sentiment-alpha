@@ -1,0 +1,106 @@
+# Phase 3: Predictive Modeling, Out-of-Sample Validation & Portfolio Manager Agent Configuration
+# Forensically Audited Spec (Section 3.1 - 3.6)
+
+features:
+  group_a_price_vol_clock:
+    - "log_ret_1h"
+    - "log_ret_3h"
+    - "log_ret_6h"
+    - "realized_vol_12h"
+    - "atr_pct"
+    - "rsi_14"
+    - "price_vs_vwap_pct"
+    - "volume_zscore_24h"
+    - "bar_range_pct"
+    - "close_pos_in_bar"
+    - "is_session_close_bar"
+    - "bar_duration_min_is_30"
+    - "is_hkex"
+  group_b_kde_sr:
+    - "dist_to_support_1_atr"
+    - "dist_to_resistance_1_atr"
+    - "sr_risk_reward_ratio"
+    - "dist_to_poc_atr"
+    - "in_value_area"
+  group_c_sentiment_alpha:
+    - "retail_sent_6h"
+    - "retail_sent_24h"
+    - "retail_sent_momentum"
+    - "news_sent_24h"
+    - "divergence_retail_vs_news_24h"
+    - "divergence_retail_vs_news_fast"
+    - "mention_velocity_zscore_24h"
+    - "engagement_velocity_zscore_24h"
+    - "mention_acceleration"
+    - "sarcasm_rate_24h"
+    - "hype_intensity_24h"
+    - "sentiment_dispersion_24h"
+    - "net_crowd_approval_24h"
+    - "hours_since_last_social"
+    - "hours_since_last_news"
+    - "holder_vs_nonholder_spread_24h"
+    - "verified_holder_share_24h"
+    - "has_verified_holder_signal"
+    - "copula_div_trend"
+    - "copula_div_vol"
+
+target:
+  vol_floor: 0.002
+  y_clip: 4.0
+
+warmup:
+  min_bar_idx: 17
+  staleness_cap_hours: 72.0
+
+models:
+  huber:
+    epsilon: 1.35
+    alpha: 10.0
+    max_iter: 500
+  lgbm:
+    objective: "huber"
+    alpha: 1.35
+    max_depth: 2
+    num_leaves: 4
+    min_child_samples: 15
+    learning_rate: 0.03
+    n_estimators: 60
+    colsample_bytree: 0.7
+    subsample: 0.8
+    subsample_freq: 1
+    reg_alpha: 1.0
+    reg_lambda: 10.0
+    random_state: 42
+    verbosity: -1
+  blend:
+    huber_weight: 0.60
+    lgbm_weight: 0.40
+  moe_gating:
+    enabled: true
+    state_features:
+      - "realized_vol_12h"
+      - "atr_pct"
+      - "sentiment_dispersion_24h"
+    l2_reg: 1.0
+    cv_folds: 5
+
+backtest:
+  hurdle_bps: 15.0 # 0.0015 in return space (3x slippage)
+  slippage_bps: 5.0 # 0.0005 in return space (one-way on turnover)
+  sr_buffer_atr: 0.25
+  hkex_bars_per_day: 7
+  krx_bars_per_day: 6
+  execution_gate:
+    mode: "snr"
+    snr_threshold: 0.20
+    aleatoric_weight: 0.5
+  risk_sizing:
+    mode: "volatility_targeted"
+    annual_target_vol: 0.15
+  cooldown:
+    enabled: true
+    max_consecutive_losses: 2
+    cooldown_bars: 2
+
+smoke_test:
+  tickers: ["0700.HK", "005930.KS"]

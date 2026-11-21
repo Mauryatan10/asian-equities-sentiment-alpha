@@ -19,3 +19,9 @@ langgraph==1.2.22
 openai==3.55.0
 scipy==1.18.1
 numpy==2.5.5
+
+# Phase 3: Predictive Modeling, Out-of-Sample Validation & Portfolio Manager Agent (pinned to .venv)
+scikit-learn==1.9.1
+lightgbm==4.7.0
+
+

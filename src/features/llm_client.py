@@ -221,3 +221,136 @@ class CloudLLMClient:
         raise RuntimeError(
             f"LLM call failed after {max_attempts} attempts ({self.provider}/{self.model}): {last_exc}"
         ) from last_exc
+
+    def chat_json_with_reasoning(
+        self,
+        system_prompt: str,
+        user_prompt: str,
+        max_tokens: int | None = None,
+        temperature: float | None = None,
+        extra_body_override: dict[str, Any] | None = None,
+    ) -> tuple[dict[str, Any], str, str | None]:
+        """Call chat.completions in JSON mode with thinking/reasoning extraction,
+        rate limiting, and 5x Retry-After backoff.
+
+        Returns (parsed_json_dict, raw_content_str, reasoning_content_str_or_none).
+        """
+        backoff_schedule = self.cfg.llm.retry_backoff_seconds
+        max_attempts = max(1, self.cfg.llm.retry_max_attempts)
+
+        kwargs: dict[str, Any] = {
+            "model": self.model,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
+            ],
+            "temperature": self.cfg.llm.temperature if temperature is None else temperature,
+            "max_tokens": self.cfg.llm.max_tokens if max_tokens is None else max_tokens,
+        }
+        if self.provider_cfg.use_response_format_json:
+            kwargs["response_format"] = {"type": "json_object"}
+        if extra_body_override is not None:
+            kwargs["extra_body"] = extra_body_override
+        elif self.provider_cfg.extra_body:
+            kwargs["extra_body"] = self.provider_cfg.extra_body
+
+        last_exc: Exception | None = None
+        for attempt in range(1, max_attempts + 1):
+            sleep_s: float | None = None
+            with self._semaphore:
+                self.rate_limiter.acquire()
+                try:
+                    with self._stats_lock:
+                        self.total_calls += 1
+                    resp = self._client.chat.completions.create(**kwargs)
+                    choice = resp.choices[0] if resp.choices else None
+                    raw_msg = choice.message if choice else None
+                    content = (getattr(raw_msg, "content", "") or "") if raw_msg else ""
+                    reasoning: str | None = (
+                        getattr(raw_msg, "reasoning_content", None)
+                        or getattr(raw_msg, "reasoning", None)
+                    )
+                    # If provider embedded thinking in <think> tags in content
+                    if not reasoning and "<think>" in content:
+                        m_think = _THINK_BLOCK_RE.search(content)
+                        if m_think:
+                            reasoning = m_think.group(0).replace("<think>", "").replace("</think>", "").strip()
+
+                    # Check if thinking exhausted tokens leaving empty content
+                    cleaned_content = strip_thinking_and_fences(content)
+                    if not cleaned_content and attempt < max_attempts:
+                        logger.warning(
+                            "[llm:%s/%s] Empty content returned (likely thinking exhausted max_tokens). "
+                            "Retrying with concise-thinking directive (attempt %d/%d)...",
+                            self.provider,
+                            self.model,
+                            attempt,
+                            max_attempts,
+                        )
+                        kwargs["messages"][0]["content"] = (
+                            system_prompt
+                            + "\nIMPORTANT: Keep internal reasoning concise under 800 tokens before outputting JSON."
+                        )
+                        continue
+
+                    parsed = parse_llm_json_object(content)
+                    return parsed, content, reasoning
+                except (RateLimitError, APITimeoutError, APIConnectionError) as exc:
+                    last_exc = exc
+                    retry_after = _extract_retry_after_seconds(exc)
+                    base_wait = backoff_schedule[min(attempt - 1, len(backoff_schedule) - 1)]
+                    sleep_s = max(float(base_wait), retry_after or 0.0)
+                    logger.warning(
+                        "[llm:%s/%s] Retryable transport/rate error (attempt %d/%d): %s — sleeping %.1fs",
+                        self.provider,
+                        self.model,
+                        attempt,
+                        max_attempts,
+                        exc,
+                        sleep_s,
+                    )
+                except APIStatusError as exc:
+                    last_exc = exc
+                    status_code = getattr(exc, "status_code", None)
+                    if status_code in _RETRYABLE_STATUS_CODES and attempt < max_attempts:
+                        retry_after = _extract_retry_after_seconds(exc)
+                        base_wait = backoff_schedule[min(attempt - 1, len(backoff_schedule) - 1)]
+                        sleep_s = max(float(base_wait), retry_after or 0.0)
+                        logger.warning(
+                            "[llm:%s/%s] HTTP %s (attempt %d/%d): %s — sleeping %.1fs",
+                            self.provider,
+                            self.model,
+                            status_code,
+                            attempt,
+                            max_attempts,
+                            exc,
+                            sleep_s,
+                        )
+                    else:
+                        raise
+                except (json.JSONDecodeError, ValueError) as exc:
+                    last_exc = exc
+                    if attempt < max_attempts:
+                        logger.warning(
+                            "[llm:%s/%s] JSON decode error (attempt %d/%d): %s — retrying with concise directive",
+                            self.provider,
+                            self.model,
+                            attempt,
+                            max_attempts,
+                            exc,
+                        )
+                        kwargs["messages"][0]["content"] = (
+                            system_prompt
+                            + "\nIMPORTANT: Ensure valid, strict JSON output only. Keep internal reasoning concise."
+                        )
+                        base_wait = backoff_schedule[min(attempt - 1, len(backoff_schedule) - 1)]
+                        sleep_s = float(base_wait)
+                    else:
+                        raise ValueError(f"Malformed JSON from {self.provider}/{self.model}: {exc}") from exc
+
+            if sleep_s is not None and attempt < max_attempts:
+                time.sleep(sleep_s)
+
+        raise RuntimeError(
+            f"LLM call failed after {max_attempts} attempts ({self.provider}/{self.model}): {last_exc}"
+        ) from last_exc

@@ -38,9 +38,6 @@ def run_phase2_preflight(
             f"Sample available models: {available_models[:15]}"
         )
 
-    pm_model = prov_cfg.portfolio_manager_model
-    pm_found = (pm_model in available_models) or (pm_model in normalized_models)
-
     # Sanity Test 1: HKEX Cantonese sarcasm
     hk_item = {
         "event_id": "preflight_hkex_cantonese_001",
@@ -92,8 +89,6 @@ def run_phase2_preflight(
         "base_url": prov_cfg.base_url,
         "cultural_nlp_model": target_model,
         "cultural_nlp_model_verified": cultural_found,
-        "portfolio_manager_model": pm_model,
-        "portfolio_manager_model_verified": pm_found,
         "available_model_count": len(available_models),
         "models_latency_s": models_latency_s,
         "hkex_cantonese_sanity": {

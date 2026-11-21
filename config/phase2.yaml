@@ -21,7 +21,6 @@ llm:
       base_url: "https://integrate.api.nvidia.com/v1"
       api_key_env: "NVIDIA_API_KEY"
       cultural_nlp_model: "nvidia/nemotron-3.5-lightning-30b-a3b"
-      portfolio_manager_model: "nvidia/nemotron-3.5-super-vl-120b-a12b"
       alt_models:
         - "minimaxai/minimax-m3.1-flash"
       extra_body:
@@ -32,14 +31,12 @@ llm:
       base_url: "https://generativelanguage.googleapis.com/v1beta/openai/"
       api_key_env: "GEMINI_API_KEY"
       cultural_nlp_model: "gemini-2.5-flash"
-      portfolio_manager_model: "gemini-2.5-flash"
       extra_body: {}
       use_response_format_json: true
     groq:
       base_url: "https://api.groq.com/openai/v1"
       api_key_env: "GROQ_API_KEY"
       cultural_nlp_model: "qwen/qwen3-32b"
-      portfolio_manager_model: "qwen/qwen3-32b"
       extra_body: {}
       use_response_format_json: true
 

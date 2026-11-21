@@ -1,0 +1,23 @@
+sequenceDiagram
+    autonumber
+    participant Pipeline as Feature Pipeline
+    participant Agent as CulturalNLPAgent
+    participant NIM as NVIDIA NIM (Nemotron-3.5-30B)
+    participant Validator as Pydantic Schema Validator
+    participant Store as Checkpoint Store (JSONL)
+
+    Pipeline->>Agent: Send batch of 25 sanitized events for Ticker T
+    Agent->>Agent: Construct System Prompt (Domain Glossary + Rules)
+    Agent->>Agent: Construct User Payload (Capped Title & Body)
+    Agent->>NIM: POST /chat/completions (temp=0.1, JSON mode)
+    NIM-->>Agent: Raw JSON String Response
+    Agent->>Validator: Parse items through ScoredEventItem
+    alt JSON Malformed or Missing ID
+        Validator-->>Agent: ValidationError
+        Agent->>Agent: Auto-Bisect Batch (split into two halves)
+        Agent->>NIM: Re-query bisected sub-batches
+    else Validation Successful
+        Validator-->>Agent: Validated ScoredEventItem List
+        Agent->>Store: Atomically Append to Checkpoint JSONL
+        Agent-->>Pipeline: Return Structured Scores
+    end

@@ -1,0 +1,12 @@
+flowchart TD
+    Pred["Continuous MoE Forecast: y_MoE"] --> Gate1{"Gate 1: Hurdle Rate<br/>|y_MoE| >= 15 bps?"}
+    Gate1 -- No --> Flat["Stance = FLAT (0)<br/>Hold Cash"]
+    Gate1 -- Yes --> Gate2{"Gate 2: Directional Consensus<br/>sign(Huber) == sign(LGBM)?"}
+    Gate2 -- No --> Flat
+    Gate2 -- Yes --> Gate3{"Gate 3: SNR Epistemic Gate<br/>SNR >= 0.20?"}
+    Gate3 -- No --> Flat
+    Gate3 -- Yes --> Gate4{"Gate 4: KDE S/R Clearance<br/>dist_to_barrier >= 0.25 ATR?"}
+    Gate4 -- No --> Flat
+    Gate4 -- Yes --> Gate5{"Gate 5: Sequential Cooldown<br/>Consecutive losses < 2?"}
+    Gate5 -- In Cooldown --> Flat
+    Gate5 -- Clear --> Execute["EXECUTE ORDER<br/>LONG (+1) or SHORT (-1)"]
